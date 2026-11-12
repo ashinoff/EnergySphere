@@ -35,8 +35,10 @@ BEGIN
  RETURN result;
 END $$;
 REVOKE ALL ON FUNCTION tp.admin_user(text,text,text,text,uuid),tp.admin_substitute(uuid,uuid,timestamptz,timestamptz),tp.admin_calendar(jsonb),tp.admin_policy(text,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.admin_user(text,text,text,text,uuid),tp.admin_substitute(uuid,uuid,timestamptz,timestamptz),tp.admin_calendar(jsonb),tp.admin_policy(text,integer) TO tp_runtime;
 
 -- Identities/role administration is exposed only through checked functions, not raw tables.
 CREATE FUNCTION tp.admin_directory() RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
  SELECT CASE WHEN tp.has_role('TECH_ADMIN') OR tp.has_role('PROCESS_ADMIN') THEN
  (SELECT jsonb_agg(jsonb_build_object('id',r.id,'userId',u.id,'name',u.name,'role',r.role,'resId',r.res_id)) FROM tp.roles r JOIN tp.users u ON u.id=r.user_id) ELSE '[]'::jsonb END $$;
+REVOKE ALL ON FUNCTION tp.admin_directory() FROM PUBLIC; GRANT EXECUTE ON FUNCTION tp.admin_directory() TO tp_runtime;

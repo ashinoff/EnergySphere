@@ -197,6 +197,6 @@ END $$;
 DO $$ DECLARE f text; BEGIN
  FOREACH f IN ARRAY ARRAY['tp.require_tech_admin()','tp.admin_documents(text)','tp.admin_purge_act(uuid)','tp.admin_purge_tu(uuid)','tp.admin_purge_version(uuid)',
   'tp.admin_health()','tp.admin_file_index()','tp.admin_cleanup(uuid[])','tp.admin_backup()','tp.admin_restore(jsonb)'] LOOP
-  EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC',f);
+  EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC',f);EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO tp_runtime',f);
  END LOOP;
 END $$;

@@ -16,6 +16,7 @@ CREATE FUNCTION tp.act_user_label(target_act uuid,target_user uuid) RETURNS json
  SELECT jsonb_build_object('id',u.id,'name',u.name,'source','CURRENT_PROFILE')
  FROM tp.users u WHERE u.id=target_user AND EXISTS(SELECT 1 FROM tp.acts a WHERE a.id=target_act AND tp.can_read(a.res_id)) $$;
 REVOKE ALL ON FUNCTION tp.act_user_label(uuid,uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.act_user_label(uuid,uuid) TO tp_runtime;
 CREATE INDEX audit_act_time ON tp.audit_events(act_id,created_at);
 CREATE INDEX comments_act ON tp.comments(act_id);
 CREATE INDEX comment_events_act ON tp.comment_events(act_id,created_at);

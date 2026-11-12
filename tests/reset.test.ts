@@ -18,11 +18,15 @@ before(async () => {
   await server.initialise();
   await server.start();
   await server.createDatabase('legacy');
+  const admin = new pg.Client({ connectionString: `postgres://postgres:postgres@127.0.0.1:${port}/postgres` });
+  await admin.connect();
+  await admin.query("CREATE ROLE tp_runtime LOGIN PASSWORD 'tp_runtime' NOINHERIT");
+  await admin.end();
   const c = new pg.Client({ connectionString: url });
   await c.connect();
   await c.query(`CREATE SCHEMA app; CREATE TABLE app.acts(id int); INSERT INTO app.acts VALUES (1);
-    CREATE TABLE public.schema_migrations(name text); CREATE ROLE tp_runtime LOGIN;
-    CREATE TABLE app.owned(id int); ALTER TABLE app.owned OWNER TO tp_runtime;`);
+    CREATE TABLE public.schema_migrations(name text); CREATE ROLE tp_old LOGIN;
+    CREATE TABLE app.owned(id int); ALTER TABLE app.owned OWNER TO tp_old;`);
   await c.end();
 }, { timeout: 120_000 });
 
@@ -46,7 +50,7 @@ test('очистка сносит всё один раз, затем мигра�
   const schemas = (await c.query("SELECT nspname FROM pg_namespace WHERE nspname NOT LIKE 'pg\\_%' AND nspname <> 'information_schema'")).rows.map(r => r.nspname);
   assert.deepEqual(schemas, ['public']);
   assert.equal((await c.query("SELECT to_regclass('public.schema_migrations') AS t")).rows[0].t, null);
-  assert.equal((await c.query("SELECT count(*)::int AS n FROM pg_roles WHERE rolname='tp_runtime'")).rows[0].n, 0);
+  assert.equal((await c.query("SELECT count(*)::int AS n FROM pg_tables WHERE tableowner='tp_old'")).rows[0].n, 0);
   await c.query('CREATE TABLE public.keep_me(id int)');
   await c.end();
 

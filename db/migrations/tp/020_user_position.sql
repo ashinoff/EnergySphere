@@ -30,6 +30,7 @@ BEGIN
  INSERT INTO tp.audit_events(actor_id,action,details) VALUES(tp.uid(),'LOCAL_USER_POSITION',jsonb_build_object('userId',target));
 END $$;
 REVOKE ALL ON FUNCTION tp.local_admin_position(uuid,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.local_admin_position(uuid,text) TO tp_runtime;
 
 -- Подпись участника документа теперь включает должность (лист согласования, карточка).
 CREATE OR REPLACE FUNCTION tp.act_user_label(target_act uuid,target_user uuid) RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,tp AS $$

@@ -1,5 +1,6 @@
 -- Импортировано из TP_Approval (scripts/import-tp.mjs): схема app → tp. Не править вручную.
 -- Technical administrators manage the dictionary without gaining act content access.
+REVOKE INSERT,UPDATE ON tp.error_categories FROM tp_runtime;
 CREATE FUNCTION tp.admin_error_category(target uuid,label text,enabled boolean) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
 DECLARE result tp.error_categories;
@@ -13,3 +14,4 @@ BEGIN
  RETURN to_jsonb(result);
 END $$;
 REVOKE ALL ON FUNCTION tp.admin_error_category(uuid,text,boolean) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.admin_error_category(uuid,text,boolean) TO tp_runtime;

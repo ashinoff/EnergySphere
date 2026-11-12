@@ -11,3 +11,4 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
  ORDER BY a.created_at,a.id
 $$;
 REVOKE ALL ON FUNCTION tp.contract_act(text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.contract_act(text,text) TO tp_runtime;

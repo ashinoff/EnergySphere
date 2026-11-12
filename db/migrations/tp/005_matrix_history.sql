@@ -52,5 +52,6 @@ BEGIN
    'substitution',coalesce(effective->>'id','')<>coalesce(t.assignment_snapshot->'principal'->>'id',''));
 END $$;
 REVOKE ALL ON FUNCTION tp.matrix_task_identity(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.matrix_task_identity(uuid) TO tp_runtime;
 CREATE INDEX comments_task ON tp.comments(task_id);
 CREATE INDEX tasks_act_cycle ON tp.tasks(act_id,cycle_id);

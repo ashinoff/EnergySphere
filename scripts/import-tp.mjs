@@ -1,9 +1,11 @@
 // Импорт TP_Approval (согласование актов ТП) в модуль 04 «Акты ТП».
 // Переносится как есть, меняется только обвязка:
 //   • схема app → tp (миграции, SQL в коде, параметр сеанса app.user_id → tp.user_id);
-//   • служебной роли tp_runtime в Сфере нет: её GRANT/REVOKE убираются, а защита
-//     неизменяемых полей «если пишет runtime» становится «если пишет пользователь»
-//     (задан tp.user_id), — у миграций его нет, у запросов приложения есть всегда;
+//   • модель доступа TP сохраняется: владелец схемы (у нас — владелец базы) создаёт
+//     объекты, его SECURITY DEFINER-функции обходят защиту строк; модуль работает под
+//     служебной ролью tp_runtime (её права — из миграций), для неё политики действуют.
+//     В TP владельцем был суперпользователь, поэтому FORCE ROW LEVEL SECURITY ни на что
+//     не влиял; у нас владелец обычный, и FORCE сломал бы функции TP — FORCE → ENABLE;
 //   • вход: вместо своих учёток — мост к пользователям и ролям Сферы (modules/tp/bridge.ts,
 //     пишется вручную, импортом не трогается).
 // Запуск: node scripts/import-tp.mjs "<путь к репозиторию TP_Approval>" [migrations|api|web|all]
@@ -24,10 +26,7 @@ export function sqlToTp(sql, name) {
     .replace(/search_path=pg_catalog,app\b/g, 'search_path=pg_catalog,tp')
     .replace(/SCHEMA app\b/g, 'SCHEMA tp')
     .replace(/table_schema='app'/g, "table_schema='tp'")
-    .replace(/session_user='tp_runtime'/g, "coalesce(current_setting('tp.user_id',true),'')<>''")
-    .replace(/EXECUTE format\('GRANT EXECUTE ON FUNCTION %s TO tp_runtime',f\);/g, '')
-    .split('\n').filter(line => !/^\s*(GRANT|REVOKE)\b.*\btp_runtime\b.*;\s*$/.test(line)).join('\n');
-  if (/\btp_runtime\b/.test(s)) throw new Error(`${name}: осталось упоминание tp_runtime`);
+    .replace(/FORCE ROW LEVEL SECURITY/g, 'ENABLE ROW LEVEL SECURITY');
   if (/\bapp\b(?!lic|ly|ear|roved|rove|ointed|end)/i.test(s.replace(/--.*$/gm, '').replace(/'[^']*'/g, "''"))) {
     const hit = s.split('\n').find(l => /\bapp\b/.test(l.replace(/--.*$/, '').replace(/'[^']*'/g, "''")));
     if (hit) throw new Error(`${name}: осталось слово app: ${hit.slice(0, 120)}`);
@@ -119,6 +118,19 @@ function web() {
   console.log(`интерфейс → ${to}`);
 }
 
+// ── Сквозные сценарии TP (прогоняются на сервере Сферы: tests/tp-route.test.ts) ──
+const TESTS = ['riru-review.integration.ts', 'zip.ts'];
+function tests() {
+  const to = join('tests', 'tp');
+  mkdirSync(to, { recursive: true });
+  for (const f of TESTS) {
+    let s = tsToTp(read(join(src, 'tests', f)), f).replace(/(['"`])\/api\/v1\//g, '$1/tp/api/v1/');
+    writeFileSync(join(to, f), `// Импортировано из TP_Approval (scripts/import-tp.mjs). Не править вручную.\n` + s);
+  }
+  console.log(`сценарии: ${TESTS.length} → ${to}`);
+}
+
+if (what === 'tests' || what === 'all') tests();
 if (what === 'migrations' || what === 'all') migrations();
 if (what === 'api' || what === 'all') api();
 if (what === 'web' || what === 'all') web();

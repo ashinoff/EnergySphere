@@ -9,13 +9,14 @@ CREATE TABLE tp.tu_checks(
  FOREIGN KEY(version_id,act_id) REFERENCES tp.versions(id,act_id)
 );
 ALTER TABLE tp.tu_checks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tp.tu_checks FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.tu_checks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY scope ON tp.tu_checks FOR SELECT USING(tp.act_visible(act_id));
 CREATE POLICY check_insert ON tp.tu_checks FOR INSERT WITH CHECK(tp.has_role('RIRU_ENGINEER',(SELECT res_id FROM tp.acts WHERE id=act_id)) AND created_by=tp.uid());
+GRANT SELECT,INSERT ON tp.tu_checks TO tp_runtime;
 CREATE INDEX tu_checks_source ON tp.tu_checks(act_id,version_id,technical_conditions_id,created_at DESC);
 CREATE FUNCTION tp.guard_tu_requirement() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
- IF NEW.tu_check_required IS DISTINCT FROM OLD.tu_check_required AND coalesce(current_setting('tp.user_id',true),'')<>'' THEN RAISE EXCEPTION 'TU validation requirement cannot be changed by runtime' USING ERRCODE='42501'; END IF;
+ IF NEW.tu_check_required IS DISTINCT FROM OLD.tu_check_required AND session_user='tp_runtime' THEN RAISE EXCEPTION 'TU validation requirement cannot be changed by runtime' USING ERRCODE='42501'; END IF;
  RETURN NEW;
 END $$;
 REVOKE ALL ON FUNCTION tp.guard_tu_requirement() FROM PUBLIC;

@@ -22,6 +22,7 @@ CREATE FUNCTION tp.task_role(task_role text,cycle uuid) RETURNS text LANGUAGE sq
  SELECT CASE WHEN task_role='RIRU_HEAD' AND EXISTS(SELECT 1 FROM tp.cycles WHERE id=cycle AND workflow_version=1) THEN 'RIRU_ENGINEER' ELSE task_role END
 $$;
 REVOKE ALL ON FUNCTION tp.task_role(text,uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.task_role(text,uuid) TO tp_runtime;
 CREATE OR REPLACE FUNCTION tp.can_read(area uuid) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT tp.has_role('RIRU_ENGINEER',area) OR tp.has_role('RIRU_HEAD',area) OR tp.has_role('RES_HEAD',area) OR tp.has_role('SUE') OR tp.has_role('STP') OR tp.has_role('GI') OR tp.has_role('PROCESS_ADMIN',area) $$;
 CREATE OR REPLACE FUNCTION tp.admin_substitute(target_role uuid,replacement uuid,start_time timestamptz,end_time timestamptz) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
 DECLARE area uuid; result uuid; original uuid;

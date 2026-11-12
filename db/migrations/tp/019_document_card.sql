@@ -32,22 +32,24 @@ INSERT INTO tp.card_fields(code,label,kind,unit,options,required,tu_source,sort)
  ('phases','Фазность','select',NULL,'["1ф","3ф","3фтт"]',true,'phases',30),
  ('plan_date','Планируемая дата исполнения','date',NULL,'[]',true,NULL,40);
 
-ALTER TABLE tp.card_fields ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.card_fields FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.card_fields ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.card_fields ENABLE ROW LEVEL SECURITY;
 CREATE POLICY card_fields_read ON tp.card_fields FOR SELECT USING(tp.uid() IS NOT NULL);
 CREATE POLICY card_fields_insert ON tp.card_fields FOR INSERT WITH CHECK(tp.has_role('TECH_ADMIN') OR tp.has_role('PROCESS_ADMIN'));
 CREATE POLICY card_fields_update ON tp.card_fields FOR UPDATE USING(tp.has_role('TECH_ADMIN') OR tp.has_role('PROCESS_ADMIN')) WITH CHECK(tp.has_role('TECH_ADMIN') OR tp.has_role('PROCESS_ADMIN'));
+GRANT SELECT,INSERT,UPDATE ON tp.card_fields TO tp_runtime;
 
-ALTER TABLE tp.card_values ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.card_values FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.card_values ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.card_values ENABLE ROW LEVEL SECURITY;
 CREATE POLICY card_values_read ON tp.card_values FOR SELECT USING(tp.act_visible(act_id));
 CREATE POLICY card_values_insert ON tp.card_values FOR INSERT WITH CHECK(updated_by=tp.uid() AND EXISTS(SELECT 1 FROM tp.acts a WHERE a.id=act_id AND a.state IN ('DRAFT','RETURNED','REVISING') AND tp.has_role('RIRU_ENGINEER',a.res_id)));
 CREATE POLICY card_values_update ON tp.card_values FOR UPDATE USING(EXISTS(SELECT 1 FROM tp.acts a WHERE a.id=act_id AND a.state IN ('DRAFT','RETURNED','REVISING') AND tp.has_role('RIRU_ENGINEER',a.res_id)))
  WITH CHECK(updated_by=tp.uid() AND EXISTS(SELECT 1 FROM tp.acts a WHERE a.id=act_id AND a.state IN ('DRAFT','RETURNED','REVISING') AND tp.has_role('RIRU_ENGINEER',a.res_id)));
 CREATE POLICY card_values_delete ON tp.card_values FOR DELETE USING(EXISTS(SELECT 1 FROM tp.acts a WHERE a.id=act_id AND a.state IN ('DRAFT','RETURNED','REVISING') AND tp.has_role('RIRU_ENGINEER',a.res_id)));
+GRANT SELECT,INSERT,UPDATE,DELETE ON tp.card_values TO tp_runtime;
 
 -- Снимок карточки пишется только при создании цикла; runtime не может переписать его задним числом.
 CREATE FUNCTION tp.guard_card_snapshot() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
- IF NEW.card_snapshot IS DISTINCT FROM OLD.card_snapshot AND coalesce(current_setting('tp.user_id',true),'')<>'' THEN RAISE EXCEPTION 'Card snapshot is immutable' USING ERRCODE='42501'; END IF;
+ IF NEW.card_snapshot IS DISTINCT FROM OLD.card_snapshot AND session_user='tp_runtime' THEN RAISE EXCEPTION 'Card snapshot is immutable' USING ERRCODE='42501'; END IF;
  RETURN NEW;
 END $$;
 REVOKE ALL ON FUNCTION tp.guard_card_snapshot() FROM PUBLIC;

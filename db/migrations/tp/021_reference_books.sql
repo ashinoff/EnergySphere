@@ -46,10 +46,11 @@ INSERT INTO tp.reference_books(code,title,rows,settings) VALUES
    {"voltage":"0.38","from":235.11,"to":269.74,"cores":4,"section":185},{"voltage":"0.38","from":269.75,"to":318.62,"cores":4,"section":240}]',
  '{"brands":["СИП"]}');
 
-ALTER TABLE tp.reference_books ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.reference_books FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.reference_books ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.reference_books ENABLE ROW LEVEL SECURITY;
 CREATE POLICY reference_books_read ON tp.reference_books FOR SELECT USING(tp.uid() IS NOT NULL);
 CREATE POLICY reference_books_update ON tp.reference_books FOR UPDATE USING(tp.has_role('TECH_ADMIN') OR tp.has_role('PROCESS_ADMIN'))
  WITH CHECK(updated_by=tp.uid() AND (tp.has_role('TECH_ADMIN') OR tp.has_role('PROCESS_ADMIN')));
+GRANT SELECT,UPDATE ON tp.reference_books TO tp_runtime;
 
 -- Имя редактора фиксируется при сохранении: runtime не читает tp.users напрямую.
 CREATE FUNCTION tp.reference_editor_name() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,tp AS $$

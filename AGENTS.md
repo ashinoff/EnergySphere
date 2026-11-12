@@ -59,7 +59,9 @@ db/migrations/<core|module>/NNN_*.sql   core первым, затем модул
 `DATABASE_URL`, `PORT` (3000), `KEYCLOAK_URL`, `KEYCLOAK_REALM` (platform),
 `KEYCLOAK_CLIENT` (web-desktop), `ACCESS_ROLE` (пусто — не требовать realm-роль),
 `SUPER_ADMINS` (логины/e-mail через запятую), `PLATFORM_ORIGIN`,
-`STORAGE_PATH` (/data/storage — файлы модулей), `AUTH_DISABLED` (только разработка).
+`STORAGE_PATH` (/data/storage — файлы модулей), `AUTH_DISABLED` (только разработка),
+`TP_RUNTIME_PASSWORD` (пароль служебной роли tp_runtime «Актов ТП», обязателен),
+разовые: `TP_SETUP_DATABASE_URL`, `RESET_MODULE`, `RESET_DATABASE_URL`+`RESET_CONFIRM`.
 
 ## Разработка и проверки
 
@@ -76,6 +78,19 @@ npm run build         # typecheck + сборка API и UI
 Перед коммитом: `npm run build` и `npm test` — зелёные.
 
 ## Журнал (агент ведёт сам, новые записи сверху)
+
+- **2026-11-12** — «Акты ТП»: модель доступа как в TP_Approval. Падение на Amvera
+  («new row violates row-level security policy for table reference_books»): у нас
+  миграции и функции TP принадлежат владельцу базы (не суперпользователю), а
+  FORCE ROW LEVEL SECURITY его не пропускает. Теперь: FORCE → ENABLE (владелец и
+  его SECURITY DEFINER-функции обходят защиту, как суперпользователь в TP), модуль
+  работает под служебной ролью `tp_runtime` (права — из миграций TP, политики
+  действуют). Роль создаётся при старте (`modules/tp/runtime.ts`; если владелец не
+  может — один раз `TP_SETUP_DATABASE_URL` суперпользователя), пароль —
+  `TP_RUNTIME_PASSWORD`. Разовый сброс схемы модуля — `RESET_MODULE=tp@<метка>`.
+  Тесты теперь как на Amvera: владелец — обычная роль, плюс сквозной сценарий TP
+  `riru-review` на ролях Сферы (`tests/tp-route.test.ts`, 6 групп). Права СУЭ на
+  модуль 04 — миграция core/004.
 
 - **2026-11-12** — Модуль 04 «Акты ТП», этап 1: TP_Approval перенесён целиком
   «вендорингом» (`npm run import:tp -- "<путь к TP_Approval>"`, scripts/import-tp.mjs):

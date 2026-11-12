@@ -20,6 +20,8 @@ export { requirePermission, userOf };
 
 export interface AppDeps {
   db: Db;
+  // Подключение модуля «Акты ТП» под служебной ролью tp_runtime (без него модуль не подключается).
+  tpDb?: Db;
   verify: Verify;
   tokens: TokenClient;
   access: AccessService;
@@ -36,7 +38,7 @@ const userPatch = z.object({
 });
 const resBody = z.object({ name: z.string().trim().min(2).max(120), sort: z.number().int().min(0).max(100000).optional() });
 
-export function createApp({ db, verify, tokens, access }: AppDeps) {
+export function createApp({ db, tpDb, verify, tokens, access }: AppDeps) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -222,7 +224,7 @@ export function createApp({ db, verify, tokens, access }: AppDeps) {
   mountModules(app, { db });
   // Модуль 04 «Акты ТП» (TP_Approval) — своё Express-приложение под /tp со своим
   // API (/tp/api/v1), интерфейсом (/tp/) и входом через мост к пользователям Сферы.
-  mountTp(app, { db, verify, access });
+  if (tpDb) mountTp(app, { db, tpDb, verify, access });
 
   app.use('/api', (_req, _res, next) => next(new HttpError(404, 'Не найдено.')));
 

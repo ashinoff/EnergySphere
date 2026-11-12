@@ -2,9 +2,10 @@
 CREATE TABLE tp.error_categories(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL UNIQUE CHECK(length(name) BETWEEN 1 AND 200), active boolean NOT NULL DEFAULT true);
 INSERT INTO tp.error_categories(name) VALUES ('Орфографическая'),('Пунктуационная'),('Техническая'),('Несоответствие техническим условиям'),('Ошибка в мощности'),('Ошибка в точке присоединения'),('Ошибка в наименовании питающего центра'),('Ошибка в номере опоры'),('Ошибка в реквизитах заявителя'),('Ошибка в адресе'),('Ошибка оформления'),('Другое');
 ALTER TABLE tp.error_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tp.error_categories FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.error_categories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY categories_read ON tp.error_categories FOR SELECT USING(tp.uid() IS NOT NULL);
 CREATE POLICY categories_write ON tp.error_categories FOR ALL USING(tp.has_role('TECH_ADMIN')) WITH CHECK(tp.has_role('TECH_ADMIN'));
+GRANT SELECT,INSERT,UPDATE ON tp.error_categories TO tp_runtime;
 
 ALTER TABLE tp.comments ADD COLUMN category_id uuid REFERENCES tp.error_categories;
 ALTER TABLE tp.comments ADD COLUMN category_name text;

@@ -18,6 +18,7 @@ CREATE TABLE tp.local_sessions (
 );
 CREATE INDEX local_sessions_user ON tp.local_sessions(user_id);
 CREATE INDEX local_sessions_expiry ON tp.local_sessions(expires_at);
+REVOKE ALL ON tp.local_credentials,tp.local_sessions FROM PUBLIC,tp_runtime;
 
 CREATE FUNCTION tp.local_login_candidate(wanted text) RETURNS text
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
@@ -117,3 +118,4 @@ BEGIN
 END $$;
 
 REVOKE ALL ON FUNCTION tp.local_login_candidate(text),tp.local_login_failure(text),tp.local_open_session(text,text,text),tp.local_session(text),tp.local_close_session(text),tp.local_own_password(),tp.local_change_password(text,text,text),tp.local_admin_users(),tp.local_admin_create(text,text,text,text,uuid),tp.local_admin_access(uuid,boolean,text),tp.local_admin_role(uuid,text,uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.local_login_candidate(text),tp.local_login_failure(text),tp.local_open_session(text,text,text),tp.local_session(text),tp.local_close_session(text),tp.local_own_password(),tp.local_change_password(text,text,text),tp.local_admin_users(),tp.local_admin_create(text,text,text,text,uuid),tp.local_admin_access(uuid,boolean,text),tp.local_admin_role(uuid,text,uuid) TO tp_runtime;

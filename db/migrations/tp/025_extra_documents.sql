@@ -17,8 +17,9 @@ CREATE TABLE tp.extra_documents(
  UNIQUE(act_id,kind,number));
 CREATE INDEX extra_documents_act ON tp.extra_documents(act_id);
 
-ALTER TABLE tp.extra_documents ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.extra_documents FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.extra_documents ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.extra_documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY extra_documents_read ON tp.extra_documents FOR SELECT USING(tp.act_visible(act_id));
 CREATE POLICY extra_documents_insert ON tp.extra_documents FOR INSERT WITH CHECK(created_by=tp.uid() AND EXISTS(
  SELECT 1 FROM tp.acts a JOIN tp.files f ON f.act_id=a.id WHERE a.id=act_id AND f.id=file_id AND f.kind='EXTRA_PDF' AND f.scan_status='READY'
   AND a.state IN ('DRAFT','RETURNED','REVISING') AND tp.has_role('RIRU_ENGINEER',a.res_id)));
+GRANT SELECT,INSERT ON tp.extra_documents TO tp_runtime;

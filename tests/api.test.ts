@@ -23,7 +23,10 @@ const { createPool } = await import('../apps/api/src/db.js');
 const dir = mkdtempSync(join(tmpdir(), 'es-pg-'));
 const port = 54400 + Math.floor(Math.random() * 400);
 const pg = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: true, initdbFlags: ['--encoding=UTF8', '--locale=C'] });
-const db = createPool(`postgres://postgres:postgres@127.0.0.1:${port}/es_test`);
+// Как на Amvera: база принадлежит обычной роли (не суперпользователю) — она и
+// запускает миграции. Под суперпользователем защита строк не проверялась бы.
+const db = createPool(`postgres://es_owner:es_owner@127.0.0.1:${port}/es_test`);
+const tpDb = createPool(`postgres://tp_runtime:tp_runtime@127.0.0.1:${port}/es_test`);
 const { privateKey, publicKey } = await generateKeyPair('RS256');
 const jwks = createLocalJWKSet({ keys: [{ ...(await exportJWK(publicKey)), kid: 'k1', alg: 'RS256' }] });
 
@@ -40,15 +43,22 @@ const as = async (sub: string, username: string, extra?: Record<string, unknown>
 before(async () => {
   await pg.initialise();
   await pg.start();
-  await pg.createDatabase('es_test');
+  const admin = new (await import('pg')).default.Client({ connectionString: `postgres://postgres:postgres@127.0.0.1:${port}/postgres` });
+  await admin.connect();
+  await admin.query("CREATE ROLE es_owner LOGIN PASSWORD 'es_owner' NOSUPERUSER NOCREATEROLE NOBYPASSRLS");
+  await admin.query('CREATE DATABASE es_test OWNER es_owner');
+  // Служебная роль «Актов ТП» (на Amvera её создаёт суперпользователь один раз).
+  await admin.query("CREATE ROLE tp_runtime LOGIN PASSWORD 'tp_runtime' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS");
+  await admin.end();
   await migrate(db, 'db/migrations');
   await migrate(db, 'db/migrations'); // повторный запуск ничего не ломает
   access = new AccessService(db);
   await access.seedDefaults();
-  app = createApp({ db, access, verify: createVerifier(jwks), tokens: createTokenClient(async () => new Response('{}', { status: 500 })) });
+  app = createApp({ db, tpDb, access, verify: createVerifier(jwks), tokens: createTokenClient(async () => new Response('{}', { status: 500 })) });
 }, { timeout: 120_000 });
 
 after(async () => {
+  await tpDb.end();
   await db.end();
   await pg.stop();
   // На Windows Postgres отпускает файлы не сразу — временная папка не критична.

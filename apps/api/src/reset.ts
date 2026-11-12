@@ -25,12 +25,10 @@ export async function resetDatabaseOnce(url: string, confirm: string) {
     await client.query('DROP SCHEMA public CASCADE');
     await client.query('CREATE SCHEMA public AUTHORIZATION pg_database_owner');
     await client.query('GRANT USAGE ON SCHEMA public TO PUBLIC');
-    // Служебная роль TP_Approval больше не нужна.
+    // Служебная роль tp_runtime остаётся (её снова использует модуль «Акты ТП»),
+    // снимаются только её прежние права и объекты.
     const runtime = await client.query("SELECT 1 FROM pg_roles WHERE rolname='tp_runtime'");
-    if (runtime.rowCount) {
-      await client.query('DROP OWNED BY tp_runtime');
-      await client.query('DROP ROLE tp_runtime');
-    }
+    if (runtime.rowCount) await client.query('DROP OWNED BY tp_runtime');
     await client.query('CREATE TABLE public.es_reset_done(at timestamptz NOT NULL DEFAULT now())');
     await client.query('INSERT INTO public.es_reset_done DEFAULT VALUES');
     await client.query('COMMIT');
@@ -40,5 +38,36 @@ export async function resetDatabaseOnce(url: string, confirm: string) {
     throw error;
   } finally {
     await client.end();
+  }
+}
+
+// Разовый сброс схемы ОДНОГО модуля (данные модуля удаляются, миграции модуля
+// применятся заново). Переменная RESET_MODULE=<схема>@<метка>, например tp@2026-11-12:
+// выполняется один раз на метку (отметка в es_schema_migrations), потом переменную удалить.
+// Делает владелец базы — суперпользователь не нужен.
+export async function resetModuleOnce(db: import('./db.js').Db, value: string) {
+  const match = /^(analysis|consumers|riru|tp)@([\w.-]{1,40})$/.exec(value.trim());
+  if (!match) throw new Error('RESET_MODULE: ожидается «<модуль>@<метка>», например tp@2026-11-12');
+  const [, schema, label] = match;
+  const marker = `reset/${schema}@${label}`;
+  await db.query('CREATE TABLE IF NOT EXISTS public.es_schema_migrations(name text PRIMARY KEY, hash text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())');
+  if ((await db.query('SELECT 1 FROM public.es_schema_migrations WHERE name = $1', [marker])).rowCount) {
+    console.log(`[reset] модуль ${schema} уже сбрасывался по метке ${label} — пропускаю. Удалите RESET_MODULE.`);
+    return;
+  }
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
+    await client.query(`CREATE SCHEMA ${schema}`);
+    await client.query('DELETE FROM public.es_schema_migrations WHERE name LIKE $1', [`${schema}/%`]);
+    await client.query("INSERT INTO public.es_schema_migrations(name, hash) VALUES ($1, '')", [marker]);
+    await client.query('COMMIT');
+    console.log(`[reset] схема модуля ${schema} сброшена (метка ${label}), миграции модуля применятся заново.`);
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
   }
 }

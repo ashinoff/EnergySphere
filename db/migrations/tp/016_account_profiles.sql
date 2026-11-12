@@ -192,4 +192,6 @@ BEGIN
  DELETE FROM tp.local_credentials WHERE user_id=target;
  INSERT INTO tp.audit_events(actor_id,action,details) VALUES(tp.uid(),'LOCAL_ACCOUNT_DELETED',jsonb_build_object('userId',target));
 END $$;
+REVOKE ALL ON FUNCTION tp.assert_local_roles_removable(uuid,uuid[]) FROM PUBLIC,tp_runtime;
 REVOKE ALL ON FUNCTION tp.local_admin_create(text,text,text,text,text,uuid),tp.local_admin_profile(uuid,integer,text,text,text,jsonb),tp.local_admin_delete(uuid,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.local_admin_create(text,text,text,text,text,uuid),tp.local_admin_profile(uuid,integer,text,text,text,jsonb),tp.local_admin_delete(uuid,integer) TO tp_runtime;

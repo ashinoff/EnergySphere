@@ -16,9 +16,11 @@ UPDATE tp.acts a SET contract_id=c.id FROM tp.contracts c WHERE c.res_id=a.res_i
 ALTER TABLE tp.acts ALTER COLUMN contract_id SET NOT NULL;
 ALTER TABLE tp.acts ADD FOREIGN KEY(contract_id,res_id) REFERENCES tp.contracts(id,res_id);
 ALTER TABLE tp.contracts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tp.contracts FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.contracts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY contracts_read ON tp.contracts FOR SELECT USING(tp.can_read(res_id));
 CREATE POLICY contracts_insert ON tp.contracts FOR INSERT WITH CHECK(tp.has_role('RIRU_HEAD',res_id));
+GRANT SELECT,INSERT ON tp.contracts TO tp_runtime;
+GRANT EXECUTE ON FUNCTION tp.contract_key(text) TO tp_runtime;
 CREATE FUNCTION tp.bind_contract() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  IF TG_OP='UPDATE' THEN
@@ -45,11 +47,12 @@ CREATE TABLE tp.technical_conditions(
  UNIQUE(contract_id,number)
 );
 ALTER TABLE tp.technical_conditions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tp.technical_conditions FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.technical_conditions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY tu_read ON tp.technical_conditions FOR SELECT USING(tp.can_read(res_id));
 CREATE POLICY tu_insert ON tp.technical_conditions FOR INSERT WITH CHECK(
  tp.has_role('RIRU_HEAD',res_id) AND created_by=tp.uid() AND EXISTS(
  SELECT 1 FROM tp.acts a JOIN tp.files f ON f.act_id=a.id WHERE a.id=source_act_id AND a.contract_id=technical_conditions.contract_id AND f.id=file_id AND f.kind='TU_DOCX' AND f.scan_status='READY'));
+GRANT SELECT,INSERT ON tp.technical_conditions TO tp_runtime;
 ALTER TABLE tp.acts ADD COLUMN technical_conditions_id uuid REFERENCES tp.technical_conditions;
 ALTER TABLE tp.cycles ADD COLUMN technical_conditions_id uuid REFERENCES tp.technical_conditions;
 CREATE FUNCTION tp.check_tu_reference() RETURNS trigger LANGUAGE plpgsql AS $$

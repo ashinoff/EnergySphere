@@ -12,7 +12,7 @@ import { TP_ISSUER, syncTpUser } from './bridge.js';
 // Модуль 04 «Акты ТП» = TP_Approval (core/ — импорт scripts/import-tp.mjs).
 // Его приложение работает как есть в режиме keycloak; вместо проверки токена
 // Keycloak ему подаётся своя: токен Сферы → пользователь Сферы → мост в tp.users.
-export function mountTp(app: Express, { db, verify, access }: { db: Db; verify: Verify; access: AccessService }) {
+export function mountTp(app: Express, { db, tpDb, verify, access }: { db: Db; tpDb: Db; verify: Verify; access: AccessService }) {
   const authenticate = async (header: string | undefined) => {
     try {
       let user;
@@ -31,7 +31,9 @@ export function mountTp(app: Express, { db, verify, access }: { db: Db; verify: 
     }
   };
 
-  const tp = createTpApp(db, {
+  // Запросы модуля — под tp_runtime (политики защиты строк действуют), мост ролей —
+  // под владельцем (таблицы учёток TP ему не доступны на запись).
+  const tp = createTpApp(tpDb, {
     authMode: 'keycloak',
     // Проверку токена выполняет authenticate — эти поля TP в таком режиме не использует.
     issuer: 'https://energysphere.invalid', jwksUrl: 'https://energysphere.invalid/certs', audience: 'energysphere',

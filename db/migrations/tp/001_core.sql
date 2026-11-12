@@ -40,29 +40,36 @@ CREATE TABLE tp.outbox(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), act_id uui
 CREATE TABLE tp.idempotency(user_id uuid NOT NULL REFERENCES tp.users, key text NOT NULL, path text NOT NULL, hash text NOT NULL, result jsonb NOT NULL, PRIMARY KEY(user_id,path,key));
 
 CREATE FUNCTION tp.act_visible(target uuid) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT EXISTS(SELECT 1 FROM tp.acts WHERE id=target) $$;
-ALTER TABLE tp.acts ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.acts FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.acts ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.acts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY acts_read ON tp.acts FOR SELECT USING(tp.can_read(res_id));
 CREATE POLICY acts_insert ON tp.acts FOR INSERT WITH CHECK(tp.has_role('RIRU_HEAD',res_id) AND author_id=tp.uid());
 CREATE POLICY acts_update ON tp.acts FOR UPDATE USING(tp.can_read(res_id)) WITH CHECK(tp.can_read(res_id));
 DO $$ DECLARE t text; BEGIN
  FOREACH t IN ARRAY ARRAY['files','versions','cycles','tasks','comments','comment_events','releases','audit_events','outbox'] LOOP
  EXECUTE format('ALTER TABLE tp.%I ENABLE ROW LEVEL SECURITY',t);
- EXECUTE format('ALTER TABLE tp.%I FORCE ROW LEVEL SECURITY',t);
+ EXECUTE format('ALTER TABLE tp.%I ENABLE ROW LEVEL SECURITY',t);
  EXECUTE format('CREATE POLICY scope ON tp.%I USING(tp.act_visible(act_id)) WITH CHECK(tp.act_visible(act_id))',t);
  END LOOP;
 END $$;
-ALTER TABLE tp.decisions ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.decisions FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.decisions ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.decisions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY scope ON tp.decisions USING(EXISTS(SELECT 1 FROM tp.tasks WHERE id=task_id)) WITH CHECK(actor_id=tp.uid() AND EXISTS(SELECT 1 FROM tp.tasks WHERE id=task_id AND assignee_id=tp.uid() AND status='OPEN'));
-ALTER TABLE tp.notifications ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.notifications FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.notifications ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY notification_read ON tp.notifications FOR SELECT USING(recipient_id=tp.uid() AND tp.act_visible(act_id));
 CREATE POLICY notification_insert ON tp.notifications FOR INSERT WITH CHECK(tp.act_visible(act_id));
 CREATE POLICY notification_update ON tp.notifications FOR UPDATE USING(recipient_id=tp.uid() AND tp.act_visible(act_id)) WITH CHECK(recipient_id=tp.uid());
-ALTER TABLE tp.idempotency ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.idempotency FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.idempotency ENABLE ROW LEVEL SECURITY; ALTER TABLE tp.idempotency ENABLE ROW LEVEL SECURITY;
 CREATE POLICY own ON tp.idempotency USING(user_id=tp.uid()) WITH CHECK(user_id=tp.uid());
 CREATE INDEX tasks_user_open ON tp.tasks(assignee_id,status,due_at);
 CREATE INDEX acts_area ON tp.acts(res_id,created_at);
 CREATE INDEX notifications_user ON tp.notifications(recipient_id,created_at);
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA tp FROM PUBLIC;
+GRANT USAGE ON SCHEMA tp TO tp_runtime;
+GRANT EXECUTE ON FUNCTION tp.uid(), tp.has_role(text,uuid), tp.can_read(uuid), tp.resolve_identity(text,text), tp.candidates(text,uuid), tp.act_visible(uuid) TO tp_runtime;
+GRANT SELECT ON ALL TABLES IN SCHEMA tp TO tp_runtime;
+REVOKE SELECT ON tp.users,tp.roles,tp.substitutions FROM tp_runtime;
+GRANT INSERT ON tp.acts,tp.files,tp.versions,tp.cycles,tp.tasks,tp.decisions,tp.comments,tp.comment_events,tp.releases,tp.notifications,tp.audit_events,tp.outbox,tp.idempotency TO tp_runtime;
+GRANT UPDATE ON tp.acts,tp.cycles,tp.tasks,tp.releases,tp.notifications,tp.files TO tp_runtime;
 
 CREATE FUNCTION tp.my_profile() RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
  SELECT jsonb_build_object('id',u.id,'name',u.name,'roles',coalesce((SELECT jsonb_agg(jsonb_build_object('role',role,'resId',res_id)) FROM tp.roles WHERE user_id=u.id),'[]'::jsonb)) FROM tp.users u WHERE u.id=tp.uid() AND active $$;
+REVOKE ALL ON FUNCTION tp.my_profile() FROM PUBLIC; GRANT EXECUTE ON FUNCTION tp.my_profile() TO tp_runtime;

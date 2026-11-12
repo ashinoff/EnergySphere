@@ -9,3 +9,4 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,tp AS $$
  WHERE r.revoked_at IS NULL AND r.role=wanted AND (r.res_id IS NULL OR r.res_id=area) AND tp.uid() IS NOT NULL
 $$;
 REVOKE ALL ON FUNCTION tp.candidate_labels(text,uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.candidate_labels(text,uuid) TO tp_runtime;

@@ -13,10 +13,11 @@ CREATE TABLE tp.pu_sync(
  synced_count integer NOT NULL DEFAULT 1 CHECK(synced_count>0)
 );
 ALTER TABLE tp.pu_sync ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tp.pu_sync FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.pu_sync ENABLE ROW LEVEL SECURITY;
 -- Отметка не содержит персональных данных; читают все (и рабочее место, и сервис «Учёт ПУ» без пользователя),
 -- пишет только tp.pu_sync_mark.
 CREATE POLICY pu_sync_read ON tp.pu_sync FOR SELECT USING(true);
+GRANT SELECT ON tp.pu_sync TO tp_runtime;
 
 -- Одна строка на номер договора: данные берутся из акта ТП (если его нет — из АВТУ), последнего по времени создания.
 -- Мимо RLS: сервис «Учёт ПУ» работает без пользователя; рабочее место фильтрует строки по своей области само.
@@ -61,3 +62,4 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION tp.pu_sync_rows(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION tp.pu_sync_mark(text,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tp.pu_sync_rows(text),tp.pu_sync_mark(text,text,text) TO tp_runtime;

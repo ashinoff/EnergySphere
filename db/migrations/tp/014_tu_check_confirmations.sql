@@ -15,10 +15,11 @@ CREATE TABLE tp.tu_check_confirmations(
  UNIQUE(check_id,field)
 );
 ALTER TABLE tp.tu_check_confirmations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tp.tu_check_confirmations FORCE ROW LEVEL SECURITY;
+ALTER TABLE tp.tu_check_confirmations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY scope ON tp.tu_check_confirmations FOR SELECT USING(tp.act_visible(act_id));
 CREATE POLICY confirmation_insert ON tp.tu_check_confirmations FOR INSERT
  WITH CHECK(actor_id=tp.uid() AND tp.has_role('RIRU_ENGINEER',(SELECT res_id FROM tp.acts WHERE id=act_id)));
+GRANT SELECT,INSERT ON tp.tu_check_confirmations TO tp_runtime;
 CREATE INDEX tu_check_confirmations_check ON tp.tu_check_confirmations(check_id);
 
 CREATE FUNCTION tp.validate_tu_confirmation() RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog,tp AS $$
