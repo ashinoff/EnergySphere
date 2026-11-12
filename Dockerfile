@@ -13,5 +13,6 @@ COPY --from=build /app/package*.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY db/migrations ./db/migrations
+COPY db/seed ./db/seed
 EXPOSE 3000
 CMD ["node","dist/api/server.js"]

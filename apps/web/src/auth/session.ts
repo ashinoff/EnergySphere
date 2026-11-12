@@ -68,7 +68,7 @@ function refresh(): Promise<boolean> {
 
 // Запрос к API с токеном. Перед истечением токен продлевается, на 401 — одна
 // попытка продлить и повторить, потом выход на экран входа.
-export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
+async function authorized(path: string, init: RequestInit & { json?: unknown }): Promise<Response> {
   if (session?.refreshToken && session.expiresAt - Date.now() < 30_000) await refresh();
   const send = () => {
     const headers = new Headers(init.headers);
@@ -84,7 +84,17 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
     else save(null);
   }
   if (!response.ok) throw await readError(response);
+  return response;
+}
+
+export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
+  const response = await authorized(path, init);
   return response.status === 204 ? (undefined as T) : response.json();
+}
+
+// Файл (например, PDF) с авторизацией — ссылкой его не открыть: нужен заголовок с токеном.
+export async function apiBlob(path: string): Promise<Blob> {
+  return (await authorized(path, {})).blob();
 }
 
 // ── Встраивание в платформу ──────────────────────────────────────────

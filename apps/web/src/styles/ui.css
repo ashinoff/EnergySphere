@@ -43,6 +43,11 @@
 }
 .select select.is-invalid { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-bg); }
 
+/* ── Многострочное поле и полоса прогресса ───────────────────────────── */
+.textarea { height: auto; min-height: var(--control-h); padding: 10px 14px; line-height: 1.45; resize: vertical; }
+.progress { display: block; height: 8px; border-radius: 999px; background: #ebeae4; overflow: hidden; }
+.progress span { display: block; height: 100%; border-radius: inherit; background: var(--accent-strong, var(--graphite)); transition: width .3s var(--ease); }
+
 /* ── Карточки, заголовки страниц ─────────────────────────────────────── */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
 .card + .card { margin-top: 20px; }

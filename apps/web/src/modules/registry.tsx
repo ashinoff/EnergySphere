@@ -60,11 +60,11 @@ export const MODULES: ModuleMeta[] = [
     id: 'riru', num: '03', title: 'Инструкция начальника РИРУ', subtitle: 'Порядок работы\nи необходимые действия',
     icon: <IconBook />, image: '/img/riru.png', tint: '#e4ccaa', accent: '#e2c391', strong: '#8a5a12', view: 'riru.view',
     menu: [
-      { id: 'strategic', title: 'Стратегический план', icon: <IconTarget />, about: 'Цели на год и ключевые показатели.' },
-      { id: 'tactical', title: 'Тактический план', icon: <IconLayers />, about: 'Задачи на квартал и месяц, ответственные и сроки.' },
-      { id: 'operational', title: 'Оперативный план', icon: <IconCalendar />, about: 'Действия на неделю и день.' },
-      { id: 'technology', title: 'Технология работ', icon: <IconWrench />, about: 'Пошаговые инструкции по видам работ.' },
-      { id: 'docs', title: 'Нормативные документы', icon: <IconFolder />, about: 'Законы, приказы и распоряжения в PDF.' },
+      { id: 'strategic', title: 'Стратегический план', icon: <IconTarget />, about: 'Годовой план: ключевые направления работы РИРУ и задачи по ним.' },
+      { id: 'tactical', title: 'Тактический план', icon: <IconLayers />, about: 'Ежемесячный план работ по направлениям: сроки и нормативная основа.' },
+      { id: 'operational', title: 'Оперативный план', icon: <IconCalendar />, about: 'Ежедневная последовательность действий: утро, день, вечер.' },
+      { id: 'technology', title: 'Технология работ', icon: <IconWrench />, about: 'Технологические карты по установке, замене и проверке приборов учёта.' },
+      { id: 'docs', title: 'Нормативные документы', icon: <IconFolder />, about: 'Регламенты, законы и постановления в PDF.' },
     ],
   },
   {

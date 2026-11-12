@@ -14,6 +14,9 @@ export const config = {
   platformOrigin: process.env.PLATFORM_ORIGIN ?? 'https://sue-system-2-ashinoff.waw0.amvera.tech',
   webPath: process.env.WEB_PATH ?? 'dist/web',
   migrationsPath: process.env.MIGRATIONS_PATH ?? 'db/migrations',
+  // Файлы, поставляемые с приложением (PDF нормативки и т.п.), и загруженные файлы.
+  seedPath: process.env.SEED_PATH ?? 'db/seed',
+  storagePath: process.env.STORAGE_PATH ?? '.data/storage',
   authDisabled: process.env.AUTH_DISABLED === 'true',
 };
 

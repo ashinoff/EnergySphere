@@ -12,6 +12,9 @@ import {
   LOCKED_ROLE, PERMISSIONS, PERMISSION_GROUPS, ROLES, ROLE_IDS, isPermission, isRole, type Permission,
 } from './core/access.js';
 import { mountModules } from './modules/index.js';
+import { requirePermission, route, userOf } from './core/http.js';
+
+export { requirePermission, userOf };
 
 export interface AppDeps {
   db: Db;
@@ -20,23 +23,13 @@ export interface AppDeps {
   access: AccessService;
 }
 
-type Handler = (req: Request, res: Response) => Promise<unknown>;
-const route = (fn: Handler) => (req: Request, res: Response, next: NextFunction) => { fn(req, res).catch(next); };
-export const userOf = (res: Response) => res.locals.user as UserContext;
-
-export function requirePermission(...keys: Permission[]) {
-  return (_req: Request, res: Response, next: NextFunction) => {
-    const user = userOf(res);
-    if (keys.some(k => user.permissions.has(k))) return next();
-    next(new HttpError(403, `Недостаточно прав: ${PERMISSIONS[keys[0]].title}`));
-  };
-}
-
-const DEV_USER: UserContext = {
-  id: 0, username: 'dev', email: null, fullName: 'Разработчик (вход без Keycloak)', role: 'admin',
-  resId: null, resName: null, isSuper: true, status: 'active',
-  permissions: new Set(Object.keys(PERMISSIONS) as Permission[]), resScope: null,
-};
+// Только разработка (AUTH_DISABLED): настоящая учётка «dev» в базе — чтобы
+// работало всё, что ссылается на пользователя, — но с правами суперадмина.
+const DEV_IDENTITY = { sub: 'dev-local', username: 'dev', email: null, name: 'Разработчик (вход без Keycloak)', roles: [] };
+const asDevSuper = (user: UserContext): UserContext => ({
+  ...user, isSuper: true, status: 'active', resScope: null,
+  permissions: new Set(Object.keys(PERMISSIONS) as Permission[]),
+});
 
 const credentials = z.object({ username: z.string().trim().min(1).max(200), password: z.string().min(1).max(500) });
 const refreshBody = z.object({ refreshToken: z.string().min(10).max(8000) });
@@ -95,7 +88,10 @@ export function createApp({ db, verify, tokens, access }: AppDeps) {
 
   // ── Всё остальное под /api — только с токеном ────────────────────────
   app.use('/api', (req, res, next) => {
-    if (config.authDisabled && !config.production) { res.locals.user = DEV_USER; return next(); }
+    if (config.authDisabled && !config.production) {
+      access.resolve(DEV_IDENTITY).then(user => { res.locals.user = asDevSuper(user); next(); }, next);
+      return;
+    }
     const header = req.headers.authorization;
     if (!header?.startsWith('Bearer ')) return next(new HttpError(401, 'Войдите в систему.'));
     verify(header.slice(7)).then(identity => access.resolve(identity))
@@ -229,7 +225,7 @@ export function createApp({ db, verify, tokens, access }: AppDeps) {
     res.json({ ok: true });
   }));
 
-  mountModules(app);
+  mountModules(app, { db });
 
   app.use('/api', (_req, _res, next) => next(new HttpError(404, 'Не найдено.')));
 

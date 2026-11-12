@@ -11,7 +11,7 @@ import { migrate } from '../apps/api/src/migrate.js';
 
 const dir = mkdtempSync(join(tmpdir(), 'es-reset-'));
 const port = 54900 + Math.floor(Math.random() * 90);
-const server = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: false });
+const server = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: true });
 const url = `postgres://postgres:postgres@127.0.0.1:${port}/legacy`;
 
 before(async () => {

@@ -12,6 +12,7 @@ import request from 'supertest';
 process.env.SUPER_ADMINS = 'boss';
 process.env.KEYCLOAK_URL = 'https://kc.test';
 process.env.KEYCLOAK_REALM = 'platform';
+process.env.STORAGE_PATH = mkdtempSync(join(tmpdir(), 'es-store-'));
 
 const { createApp } = await import('../apps/api/src/app.js');
 const { AccessService } = await import('../apps/api/src/core/access-service.js');
@@ -21,7 +22,7 @@ const { createPool } = await import('../apps/api/src/db.js');
 
 const dir = mkdtempSync(join(tmpdir(), 'es-pg-'));
 const port = 54400 + Math.floor(Math.random() * 400);
-const pg = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: false });
+const pg = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: true });
 const db = createPool(`postgres://postgres:postgres@127.0.0.1:${port}/es_test`);
 const { privateKey, publicKey } = await generateKeyPair('RS256');
 const jwks = createLocalJWKSet({ keys: [{ ...(await exportJWK(publicKey)), kid: 'k1', alg: 'RS256' }] });
@@ -149,4 +150,54 @@ test('вход: ответы Keycloak переводятся в понятные
   assert.equal(ok.accessToken, 'A');
   const login = await request(app).post('/api/auth/login').send({ username: '', password: '' });
   assert.equal(login.status, 400);
+});
+
+test('РИРУ: план с личными отметками за период, правка — только по праву', async () => {
+  const boss = await as('sub-boss', 'boss');
+  const plan = await request(app).get('/api/riru/plan/strategic').set(boss);
+  assert.equal(plan.status, 200);
+  assert.equal(plan.body.data.length, 3);
+  assert.match(plan.body.period.label, /год/);
+  const item = plan.body.data[0].tasks[0].id;
+  assert.equal((await request(app).post('/api/riru/plan/strategic/progress').set(boss).send({ itemId: item, done: true })).status, 200);
+  assert.deepEqual((await request(app).get('/api/riru/plan/strategic').set(boss)).body.done, [item]);
+  assert.equal((await request(app).post('/api/riru/plan/strategic/progress').set(boss).send({ itemId: 'нет', done: true })).status, 404);
+
+  const dup = structuredClone(plan.body.data);
+  dup[0].tasks.push({ ...dup[0].tasks[0] });
+  assert.equal((await request(app).put('/api/riru/plan/strategic').set(boss).send({ data: dup })).status, 400);
+  const edited = structuredClone(plan.body.data);
+  edited[0].tasks[0].title = 'Новое название';
+  assert.equal((await request(app).put('/api/riru/plan/strategic').set(boss).send({ data: edited })).status, 200);
+  assert.equal((await request(app).get('/api/riru/plan/strategic').set(boss)).body.data[0].tasks[0].title, 'Новое название');
+
+  const op = await request(app).get('/api/riru/plan/operational').set(boss);
+  assert.match(op.body.period.resets, /ежедневно/);
+  const pending = await as('sub-new', 'newbie');
+  assert.equal((await request(app).get('/api/riru/plan/strategic').set(pending)).status, 403);
+});
+
+test('РИРУ: нормативка из поставки и загрузка своего PDF', async () => {
+  const boss = await as('sub-boss', 'boss');
+  const docs = await request(app).get('/api/riru/docs').set(boss);
+  assert.equal(docs.body.length, 21);
+  assert.ok(docs.body.every((d: { files: { ref?: string }[] }) => d.files.every(f => !('ref' in f))));
+  const n49 = docs.body.find((d: { num: string; category: string }) => d.num === '49' && d.category === 'normative');
+  const pdf = await request(app).get(`/api/riru/docs/${n49.id}/files/0`).set(boss).buffer(true).parse((r, cb) => {
+    const parts: Buffer[] = []; r.on('data', (c: Buffer) => parts.push(c)); r.on('end', () => cb(null, Buffer.concat(parts)));
+  });
+  assert.equal(pdf.status, 200);
+  assert.equal(pdf.headers['content-type'], 'application/pdf');
+  assert.equal((pdf.body as Buffer).subarray(0, 5).toString(), '%PDF-');
+
+  const created = await request(app).post('/api/riru/docs').set(boss).send({ category: 'normative', num: '777', name: 'Тестовый приказ' });
+  assert.equal(created.status, 201);
+  const bad = await request(app).post(`/api/riru/docs/${created.body.id}/files`).set(boss).set('Content-Type', 'application/pdf').send(Buffer.from('not a pdf'));
+  assert.equal(bad.status, 400);
+  const up = await request(app).post(`/api/riru/docs/${created.body.id}/files`).set(boss)
+    .set('Content-Type', 'application/pdf').set('X-File-Title', encodeURIComponent('Приложение 1')).send(Buffer.from('%PDF-1.4 test'));
+  assert.equal(up.status, 201);
+  const after = (await request(app).get('/api/riru/docs').set(boss)).body.find((d: { id: number }) => d.id === created.body.id);
+  assert.equal(after.files[0].title, 'Приложение 1');
+  assert.equal((await request(app).delete(`/api/riru/docs/${created.body.id}`).set(boss)).status, 200);
 });

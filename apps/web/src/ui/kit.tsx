@@ -3,7 +3,7 @@
 // приходит через CSS-переменные --accent / --accent-strong (shell.css).
 import {
   createContext, useCallback, useContext, useRef, useState,
-  type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes,
+  type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes,
 } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -29,6 +29,8 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 }
 
 export const Input = (props: InputHTMLAttributes<HTMLInputElement>) => <input className="input" {...props} />;
+
+export const TextArea = (props: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea className="input textarea" rows={2} {...props} />;
 
 export const Select = ({ children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) => (
   <span className="select"><select {...props}>{children}</select></span>
@@ -58,6 +60,11 @@ export function PageHeader({ crumbs, title, subtitle, actions }: { crumbs: strin
       </div>
     </header>
   );
+}
+
+export function Progress({ value, total }: { value: number; total: number }) {
+  const pct = total ? Math.round((value / total) * 100) : 0;
+  return <span className="progress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${pct}%` }} /></span>;
 }
 
 export function Badge({ tone = 'neutral', children }: { tone?: 'neutral' | 'accent' | 'warn' | 'danger' | 'ok'; children: ReactNode }) {
