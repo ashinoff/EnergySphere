@@ -50,7 +50,8 @@ before(async () => {
 after(async () => {
   await db.end();
   await pg.stop();
-  rmSync(dir, { recursive: true, force: true });
+  // На Windows Postgres отпускает файлы не сразу — временная папка не критична.
+  try { rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }); } catch { /* останется в TEMP */ }
 });
 
 test('без токена — 401, с чужим azp — 401', async () => {
