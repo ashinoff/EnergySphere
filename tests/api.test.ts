@@ -22,7 +22,7 @@ const { createPool } = await import('../apps/api/src/db.js');
 
 const dir = mkdtempSync(join(tmpdir(), 'es-pg-'));
 const port = 54400 + Math.floor(Math.random() * 400);
-const pg = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: true });
+const pg = new EmbeddedPostgres({ databaseDir: dir, port, user: 'postgres', password: 'postgres', persistent: true, initdbFlags: ['--encoding=UTF8', '--locale=C'] });
 const db = createPool(`postgres://postgres:postgres@127.0.0.1:${port}/es_test`);
 const { privateKey, publicKey } = await generateKeyPair('RS256');
 const jwks = createLocalJWKSet({ keys: [{ ...(await exportJWK(publicKey)), kid: 'k1', alg: 'RS256' }] });
@@ -200,4 +200,33 @@ test('РИРУ: нормативка из поставки и загрузка �
   const after = (await request(app).get('/api/riru/docs').set(boss)).body.find((d: { id: number }) => d.id === created.body.id);
   assert.equal(after.files[0].title, 'Приложение 1');
   assert.equal((await request(app).delete(`/api/riru/docs/${created.body.id}`).set(boss)).status, 200);
+});
+
+test('Акты ТП: мост ролей Сферы в маршрут TP_Approval', async () => {
+  const boss = await as('sub-boss', 'boss');
+  const engHeaders = await as('sub-tp-eng', 'tpeng', { name: 'Инженер ТП' });
+  await request(app).get('/api/me').set(engHeaders);
+  // Без роли — в модуль не пускает.
+  assert.equal((await request(app).get('/tp/api/v1/me').set(engHeaders)).status, 403);
+
+  const users = (await request(app).get('/api/admin/users').set(boss)).body;
+  const eng = users.find((u: { username: string }) => u.username === 'tpeng');
+  const res = (await request(app).get('/api/res').set(boss)).body.find((r: { name: string }) => r.name === 'Хостинский РЭС');
+  assert.equal((await request(app).patch(`/api/admin/users/${eng.id}`).set(boss).send({ role: 'eng_realization', resId: res.id })).status, 200);
+
+  const me = await request(app).get('/tp/api/v1/me').set(engHeaders);
+  assert.equal(me.status, 200);
+  assert.equal(me.body.name, 'Инженер ТП');
+  assert.deepEqual(me.body.roles.map((r: { role: string }) => r.role), ['RIRU_ENGINEER']);
+  const tpRes = (await request(app).get('/tp/api/v1/res').set(engHeaders)).body.find((r: { id: string }) => r.id === me.body.roles[0].resId);
+  assert.equal(tpRes.name, 'Хостинский РЭС');
+
+  // Смена роли в Сфере — прежняя роль в TP отзывается.
+  await request(app).patch(`/api/admin/users/${eng.id}`).set(boss).send({ role: 'nach_riru', resId: res.id });
+  const again = await request(app).get('/tp/api/v1/me').set(engHeaders);
+  assert.deepEqual(again.body.roles.map((r: { role: string }) => r.role), ['RIRU_HEAD']);
+
+  const admin = await request(app).get('/tp/api/v1/me').set(boss);
+  assert.deepEqual(admin.body.roles.map((r: { role: string }) => r.role).sort(), ['PROCESS_ADMIN', 'TECH_ADMIN']);
+  assert.equal((await request(app).get('/tp/api/v1/workspace-state').set(engHeaders)).status, 200);
 });

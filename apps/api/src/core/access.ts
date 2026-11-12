@@ -20,6 +20,12 @@ export const ROLES = {
   eng_sue:         { title: 'Инженер СУЭ',          scope: 'all' },
   nach_stp:        { title: 'Начальник СТП',        scope: 'all' },
   eng_stp:         { title: 'Инженер СТП',          scope: 'all' },
+  // ТЕХБЛОК (в маршруте актов ТП): Главный инженер, СРС, ПТС.
+  glav_ing:        { title: 'Главный инженер',      scope: 'all' },
+  nach_srs:        { title: 'Начальник СРС',        scope: 'all' },
+  eng_srs:         { title: 'Инженер СРС',          scope: 'all' },
+  nach_pts:        { title: 'Начальник ПТС',        scope: 'all' },
+  eng_pts:         { title: 'Инженер ПТС',          scope: 'all' },
 } as const satisfies Record<string, { title: string; scope: Scope }>;
 
 export type Role = keyof typeof ROLES;
@@ -59,19 +65,24 @@ export type Permission = keyof typeof PERMISSIONS;
 export const PERMISSION_IDS = Object.keys(PERMISSIONS) as Permission[];
 export const isPermission = (value: unknown): value is Permission => typeof value === 'string' && value in PERMISSIONS;
 
-// Стартовые права ролей — применяются один раз, когда матрица в базе пуста.
-// Дальше всё правится в админке.
+// Стартовые права ролей — применяются один раз на роль (core.seeded_roles),
+// в том числе для ролей, добавленных позже. Дальше всё правится в админке.
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: PERMISSION_IDS,
   nach_res: ['analysis.view', 'consumers.view', 'consumers.complete', 'riru.view', 'tp.view', 'tp.approve'],
-  nach_riru: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'riru.edit'],
-  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view'],
+  nach_riru: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'riru.edit', 'tp.view', 'tp.approve'],
+  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'tp.view', 'tp.create'],
   eng_development: ['consumers.view', 'riru.view', 'tp.view', 'tp.create'],
   monter: ['consumers.view', 'consumers.field'],
   nach_sue: ['analysis.view', 'consumers.view', 'riru.view', 'riru.docs'],
   eng_sue: ['analysis.view', 'consumers.view', 'riru.view'],
   nach_stp: ['analysis.view', 'tp.view', 'tp.approve'],
   eng_stp: ['analysis.view', 'tp.view', 'tp.create'],
+  glav_ing: ['analysis.view', 'tp.view', 'tp.approve'],
+  nach_srs: ['tp.view', 'tp.approve'],
+  eng_srs: ['tp.view'],
+  nach_pts: ['tp.view', 'tp.approve'],
+  eng_pts: ['tp.view'],
 };
 
 // Администратор всегда имеет все права — его строку в матрице не редактируют,

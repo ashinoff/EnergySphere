@@ -31,6 +31,9 @@ function save(next: Stored | null) {
 const fromTokens = (t: TokenResponse): Stored => ({ accessToken: t.accessToken, refreshToken: t.refreshToken, expiresAt: Date.now() + t.expiresIn * 1000 });
 
 export const hasSession = () => session !== null;
+// Чей токен (claim sub): если внутри платформы сменился пользователь, профиль
+// нужно перечитать, даже если сессия «как была».
+export const sessionSubject = () => (session ? claimsOf(session.accessToken).sub ?? null : null);
 export const onSessionChange = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
 
 export class ApiError extends Error {
@@ -95,6 +98,14 @@ async function authorized(path: string, init: RequestInit & { json?: unknown }):
   return response;
 }
 
+// Свежий токен для встроенных частей (интерфейс актов ТП во фрейме): перед
+// отдачей продлеваем, если скоро истечёт.
+export async function freshToken(): Promise<string | null> {
+  if (session?.refreshToken && session.expiresAt - Date.now() < 60_000) await refresh();
+  else if (EMBEDDED && session && !session.refreshToken && session.expiresAt - Date.now() < 60_000) await platformToken();
+  return session?.accessToken ?? null;
+}
+
 export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const response = await authorized(path, init);
   return response.status === 204 ? (undefined as T) : response.json();
@@ -110,13 +121,14 @@ function askPlatform() {
   window.parent?.postMessage({ type: 'app-ready' }, PLATFORM_ORIGIN);
 }
 
+function claimsOf(token: string): { exp?: number; sub?: string } {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch { return {}; }
+}
+
 // Срок жизни берём из самого токена (claim exp), а не угадываем.
 function expiresAtOf(token: string) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: number };
-    if (payload.exp) return payload.exp * 1000;
-  } catch { /* не JWT — ниже запасной срок */ }
-  return Date.now() + 4 * 60_000;
+  const exp = claimsOf(token).exp;
+  return exp ? exp * 1000 : Date.now() + 4 * 60_000;
 }
 
 // Попросить у платформы новый токен и дождаться его (до 6 с). true — пришёл.

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ApiError, api, hasSession, listenPlatform, onSessionChange } from './session.js';
+import { ApiError, api, hasSession, listenPlatform, onSessionChange, sessionSubject } from './session.js';
 import type { Permission } from '../../../api/src/core/access.js';
 
 export interface Me {
@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let had = hasSession();
+    let subject = sessionSubject();
     reload();
     const stopPlatform = listenPlatform();
     const stopSession = onSessionChange(() => {
@@ -54,7 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Перечитываем профиль при входе/выходе, а также когда пришёл новый токен,
       // а профиль так и не загрузился (платформа ответила с опозданием).
       // Обычное продление токена профиль не трогает.
-      if (now !== had || (now && phase.current === 'error')) { had = now; reload(); }
+      // и когда сменился сам пользователь (на платформе вошли под другим).
+      const who = sessionSubject();
+      if (now !== had || (now && phase.current === 'error') || (now && who !== subject)) { had = now; subject = who; reload(); }
     });
     return () => { stopPlatform(); stopSession(); };
   }, [reload]);

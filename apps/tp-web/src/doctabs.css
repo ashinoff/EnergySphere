@@ -1,0 +1,471 @@
+/*
+ * Рабочее место документа (08.11.2026): строка разделов «Просмотр · Печать · Данные · История · Матрица»
+ * со значками в рамках одного размера (светятся только контур значка и рамка), схема согласования во всю ширину,
+ * разделы «Данные» и «Печать». Подключается последним — перекрывает прежние правила workspace.css/theme.css.
+ */
+:root{--glow:rgb(49 86 163 / .55);--glow-soft:rgb(49 86 163 / .18)}
+
+/* ── Строка документа ─────────────────────────────────────────────── */
+.unified-act .word-heading.doc-bar{border-radius:14px!important;padding:6px 10px!important;gap:8px 10px!important;align-items:center}
+.doc-bar-divider{width:1px;align-self:stretch;background:var(--line);margin:4px 2px}
+.doc-bar .doc-picker{display:inline-flex!important;align-items:center;gap:6px;color:var(--brand)}
+.doc-bar .doc-picker select{max-width:320px;border:1px solid var(--line)!important;background:var(--surface)!important;border-radius:999px!important;padding:6px 12px!important;font-weight:600;color:var(--ink)}
+.doc-bar .word-meta{border-left:0!important;padding:0 4px!important}
+
+/* ── Разделы со значками ─────────────────────────────────────────── */
+.doc-tabs{display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap}
+.doc-tab{position:relative;display:inline-flex;align-items:center;gap:8px;padding:4px 10px 4px 4px!important;border:0!important;border-radius:12px!important;background:transparent!important;color:var(--ink-2)!important;font-size:var(--fs-s);font-weight:500;cursor:pointer;box-shadow:none!important;transition:color .2s}
+.doc-tab-frame{width:32px;height:32px;flex:none;display:grid;place-items:center;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink-2);transition:border-color .2s,box-shadow .25s,color .2s}
+.doc-tab-frame svg{width:18px;height:18px;transition:filter .25s}
+.doc-tab:hover .doc-tab-frame{border-color:#9db2dc;color:var(--brand);box-shadow:0 0 6px var(--glow-soft)}
+.doc-tab:hover{color:var(--brand)!important}
+.doc-tab[aria-pressed=true]{color:var(--brand)!important;font-weight:600}
+.doc-tab[aria-pressed=true] .doc-tab-frame{border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 1px var(--glow-soft),0 0 12px var(--glow)}
+.doc-tab[aria-pressed=true] .doc-tab-frame svg{filter:drop-shadow(0 0 2px var(--glow)) drop-shadow(0 0 4px var(--glow-soft))}
+.doc-tab:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.doc-tab-badge{position:absolute;top:0;left:26px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--red);color:#fff;font-size:12px;line-height:16px;text-align:center;font-weight:700;box-shadow:0 0 0 2px var(--surface)}
+
+/* ── Кнопка отправки с причиной блокировки ───────────────────────── */
+.send-wrap{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.send-reason{display:inline-flex;align-items:center;gap:6px;max-width:460px;padding:5px 10px;border-radius:10px;background:var(--red-soft);color:var(--red);font-size:var(--fs-xs);font-weight:600;line-height:1.35}
+.send-reason svg{flex:none}
+.send-reason .text-button{padding:2px 8px!important;font-size:var(--fs-xs)!important;color:var(--brand)!important;background:var(--surface)!important;border-radius:999px;border:1px solid var(--line)!important}
+.send-reason-close{border:0!important;background:none!important;color:var(--red);font-size:16px;line-height:1;padding:0 2px!important;cursor:pointer}
+.review-side-foot .send-wrap{flex-direction:column;align-items:stretch}
+.review-side-foot .send-reason{max-width:none}
+
+/* ── Схема согласования в шапке ──────────────────────────────────── */
+.unified-act .act-route-row{display:block;padding-top:12px}
+.act-route-head{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.act-route-title{font-size:var(--fs-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.act-title-spacer{flex:1}
+.route-line{overflow:visible;width:100%}
+.route-sequence{display:flex;align-items:stretch;width:100%;list-style:none;margin:0;padding:0}
+.route-sequence>.route-node,.route-bus>.route-node{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:10px;padding:9px 10px!important;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:box-shadow .25s,border-color .25s}
+.route-bus .route-node::before{content:none!important}
+.route-icon{position:relative;flex:none;width:38px;height:38px;display:grid;place-items:center;border:1.5px solid var(--grey);border-radius:11px;color:var(--grey);background:var(--surface)}
+.route-icon>svg{width:20px;height:20px}
+.route-state{position:absolute;right:-6px;bottom:-6px;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--grey);box-shadow:0 0 0 2px var(--surface)}
+.route-text,.route-bus .route-text{display:flex;flex-direction:column!important;align-items:flex-start!important;gap:1px!important;min-width:0;line-height:1.3}
+.route-role,.route-bus .route-role{min-width:0!important;font-weight:700;font-size:var(--fs-s);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.route-person,.route-note{font-size:var(--fs-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.route-person{color:var(--ink)}
+.route-note{color:var(--muted)}
+/* состояния */
+.route-completed{border-color:#bfe0c2!important;background:var(--green-soft)!important}
+.route-completed .route-icon{border-color:var(--green);color:var(--green)}
+.route-completed .route-state{background:var(--green)}
+.route-active{border-color:var(--brand)!important;background:var(--brand-soft)!important;box-shadow:0 0 0 1px var(--glow-soft),0 0 14px var(--glow-soft)}
+.route-active .route-icon{border-color:var(--brand);color:var(--brand);box-shadow:0 0 10px var(--glow)}
+.route-active .route-icon>svg{filter:drop-shadow(0 0 2px var(--glow))}
+.route-active .route-state{background:var(--brand)}
+.route-active .route-note{color:var(--brand)!important;font-weight:600}
+.route-returned{border-color:#efb7b3!important;background:var(--red-soft)!important}
+.route-returned .route-icon{border-color:var(--red);color:var(--red)}
+.route-returned .route-state{background:var(--red)}
+.route-returned .route-note,.route-late .route-note{color:var(--red)!important;font-weight:600}
+.route-not_started{border-style:dashed!important;background:transparent!important}
+.route-not_started .route-role{color:var(--muted)!important;font-weight:600}
+.route-no_decision .route-state{background:var(--amber)}
+.route-mine .route-person{font-weight:600}
+/* провода между этапами */
+.route-sequence>.route-wire{flex:0 0 30px;width:auto!important;height:auto!important;margin:0!important;background:none!important;display:flex;align-items:center;list-style:none}
+.route-wire>span{position:relative;display:block;width:100%;height:2px;background:var(--grey)}
+.route-wire>span::after{content:"";position:absolute;right:-1px;top:-4px;border-left:7px solid var(--grey);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.route-wire-done>span{background:var(--green)}
+.route-wire-done>span::after{border-left-color:var(--green)}
+/* три службы параллельно */
+.route-sequence>.route-bus-item{flex:3.3 1 0;min-width:0;position:relative;display:flex;border:1.5px dashed #c3cfd6!important;border-left:1.5px dashed #c3cfd6!important;border-radius:14px;padding:12px 8px 8px;margin:0!important}
+.route-bus-done{border-color:#8fc895!important}
+.route-bus-caption{position:absolute;top:-9px;left:14px;padding:0 6px;background:var(--surface);font-size:var(--fs-xs);font-weight:600;color:var(--muted);line-height:16px}
+.route-bus{display:flex!important;flex-direction:row!important;gap:8px!important;width:100%;list-style:none;margin:0;padding:0}
+.route-bus .route-icon{width:34px;height:34px}
+.route-bus .route-icon>svg{width:18px;height:18px}
+
+@media(max-width:1180px){
+ .route-sequence{flex-wrap:wrap;row-gap:16px}
+ .route-sequence>.route-bus-item{flex:1 1 100%}
+ .route-sequence>.route-wire:last-of-type{display:none}
+}
+@media(max-width:700px){
+ .route-sequence{flex-direction:column!important;align-items:stretch!important}
+ .route-sequence>.route-wire{flex:0 0 14px;justify-content:center}
+ .route-sequence>.route-wire>span{width:2px;height:14px}
+ .route-wire>span::after{display:none}
+ .route-sequence>.route-wire:last-of-type{display:flex}
+ .route-bus{flex-direction:column!important}
+ .doc-tab-label{display:none}
+}
+
+/* ── Просмотр: документ во всю ширину, замечания справа ───────────── */
+.unified-act .act-workspace.act-view{grid-template-columns:minmax(0,1fr)!important}
+.empty-document .secondary-button{margin-top:6px;display:inline-flex;align-items:center;gap:6px}
+
+/* ── Разделы «Данные» и «Печать» ─────────────────────────────────── */
+.doc-panel{margin:0 0 12px}
+.data-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+.data-column{display:flex;flex-direction:column;gap:12px;min-width:0}
+.data-block,.unified-act .data-block.package-panel{position:static!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:14px 16px!important;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m)}
+.data-title{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:var(--fs-l);font-weight:700;color:var(--ink)}
+.data-title svg{color:var(--brand)}
+.data-title small{margin-left:auto;font-size:var(--fs-xs);font-weight:500;color:var(--muted)}
+.data-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:0}
+.data-facts>div{min-width:0}
+.data-facts>div.wide{grid-column:1 / -1}
+.data-facts dt{font-size:var(--fs-xs);color:var(--muted);margin-bottom:2px}
+.data-facts dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.data-block.document-card{margin:0}
+.data-block.document-card .card-fields{grid-template-columns:1fr 1fr}
+.data-block.card-incomplete{border-color:#efb7b3;box-shadow:0 0 0 1px var(--red-soft)}
+.data-block .package-list{margin:0}
+.upload-block .preparation-controls{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin:0;padding:0;border:0}
+.upload-block .preparation-controls .panel-subtitle{display:flex;align-items:center;gap:8px;margin:0 0 2px;font-size:var(--fs-l);font-weight:700}
+.upload-block .preparation-controls .panel-subtitle svg{color:var(--brand)}
+.upload-block .preparation-controls label{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-s);color:var(--ink-2)}
+.upload-block .preparation-controls select,.upload-block .preparation-controls input{max-width:100%}
+.upload-block .preparation-controls .upload-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px dashed #b9c7e4;border-radius:var(--r-s);background:var(--brand-soft)}
+.upload-block .preparation-controls small{color:var(--ink-2)}
+.print-panel{display:flex;flex-direction:column;gap:12px}
+.print-copy-block .primary-button{display:inline-flex;align-items:center;gap:6px;margin:4px 0 8px}
+.print-copy-block .helper-text{margin:4px 0}
+
+@media(max-width:1000px){
+ .data-panel{grid-template-columns:minmax(0,1fr)}
+ .data-block.document-card .card-fields{grid-template-columns:1fr}
+}
+
+/* ══ 08.11.2026 (вечер): единый вид переключателей — синий контур и мягкая полупрозрачная синяя заливка ══ */
+:root{--sel-line:var(--brand);--sel-fill:rgb(49 86 163 / .10);--sel-glow:0 0 0 1px rgb(49 86 163 / .12),0 0 12px rgb(49 86 163 / .22)}
+/* бегунок таблеток */
+.pill-thumb{background:var(--sel-fill)!important;box-shadow:inset 0 0 0 1.5px var(--sel-line),var(--sel-glow)!important}
+:is(.queue-switch,.doc-type-switch,.review-subtabs,.note-filter,.review-tabs) button{display:inline-flex!important;align-items:center;gap:7px}
+:is(.queue-switch,.doc-type-switch,.review-subtabs,.note-filter) button[aria-pressed=true],.review-tabs button[aria-selected=true]{color:var(--brand)!important;background:var(--sel-fill)!important;box-shadow:inset 0 0 0 1.5px var(--sel-line)!important}
+:is(.queue-switch,.doc-type-switch,.review-subtabs,.note-filter).has-thumb>button[aria-pressed=true],.review-tabs.has-thumb>button[aria-selected=true]{background:transparent!important;box-shadow:none!important}
+:is(.queue-switch,.doc-type-switch,.review-subtabs,.note-filter) button[aria-pressed=true] svg,.review-tabs button[aria-selected=true] svg{filter:drop-shadow(0 0 2px rgb(49 86 163 / .55))}
+:is(.queue-switch,.doc-type-switch) button svg{flex:none}
+/* счётчики на выбранной вкладке остаются читаемыми */
+:is(.queue-switch,.doc-type-switch) button[aria-pressed=true] .tab-count{background:var(--brand)!important;color:#fff!important}
+/* разделы документа — тот же вид */
+.doc-tab{border:1.5px solid transparent!important}
+.doc-tab[aria-pressed=true]{background:var(--sel-fill)!important;border-color:var(--sel-line)!important;box-shadow:var(--sel-glow)!important}
+.doc-tab:hover:not([aria-pressed=true]){background:rgb(49 86 163 / .05)!important}
+
+/* ══ Левое меню: кнопки одного размера, значки по теме ══ */
+.main-sidebar nav button{height:48px!important;min-height:48px!important;box-sizing:border-box;display:flex!important;align-items:center!important;gap:10px!important;padding:0 12px!important;border:1.5px solid transparent!important;text-align:left}
+.main-sidebar nav button>svg{flex:none;width:20px;height:20px}
+.main-sidebar nav button>span{flex:1;min-width:0;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.main-sidebar nav button>b{flex:none}
+.main-sidebar nav button.selected{background:rgb(91 127 208 / .22)!important;border-color:#6d8fd9!important;box-shadow:0 0 0 1px rgb(109 143 217 / .15),0 0 12px rgb(91 127 208 / .30)!important}
+.main-sidebar nav button.selected>svg{filter:drop-shadow(0 0 3px rgb(140 170 235 / .8))}
+
+/* ══ 08.11.2026 (ночь): вкладки-переключатели как разделы документа — значок в рамке, без таблеток ══ */
+:is(.queue-switch,.doc-type-switch):not(.zz){display:inline-flex!important;flex-wrap:wrap;gap:4px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;width:auto!important}
+:is(.queue-switch,.doc-type-switch)>button:not(.zz):not(.zy){display:inline-flex!important;align-items:center;gap:8px!important;padding:4px 12px 4px 4px!important;border:1.5px solid transparent!important;border-radius:12px!important;background:transparent!important;color:var(--ink-2)!important;font-size:var(--fs-s)!important;font-weight:500!important;box-shadow:none!important;min-height:0;transition:background .2s,border-color .2s,box-shadow .25s,color .2s}
+:is(.queue-switch,.doc-type-switch)>button>svg{flex:none;box-sizing:content-box;width:18px!important;height:18px!important;padding:6px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink-2);transition:border-color .2s,box-shadow .25s,color .2s,filter .25s}
+:is(.queue-switch,.doc-type-switch)>button:hover:not(:disabled):not([aria-pressed=true]){background:rgb(49 86 163 / .05)!important;color:var(--brand)!important}
+:is(.queue-switch,.doc-type-switch)>button:hover:not(:disabled)>svg{border-color:#9db2dc;color:var(--brand)}
+:is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]:not(.zz):not(.zy){background:var(--sel-fill)!important;border-color:var(--sel-line)!important;box-shadow:var(--sel-glow)!important;color:var(--brand)!important;font-weight:600!important}
+:is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]>svg{border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 1px var(--glow-soft),0 0 10px var(--glow);filter:drop-shadow(0 0 1.5px var(--glow))}
+:is(.queue-switch,.doc-type-switch)>button:disabled{opacity:.55;cursor:not-allowed}
+.pill-thumb:is(.queue-switch>*,.doc-type-switch>*){display:none}
+
+/* ══ Тёмно-синие шапки карточек (как у листа согласования): зонирование ══ */
+.navy-head{--pad:18px;background:var(--menu);color:#fff;margin:calc(-1 * var(--pad)) calc(-1 * var(--pad)) 14px;padding:12px var(--pad);border-radius:9px 9px 0 0}
+.engineer-upload>.navy-head{--pad:20px}
+.unified-act .act-header{overflow:hidden}
+.act-header-top.navy-head{margin:-12px -18px 0;padding:14px 18px 12px}
+.navy-head .act-title,.navy-head .act-title .act-number{color:#fff}
+.navy-head .act-kind{color:#9fb6e6}
+.navy-head .act-facts{margin:8px 0 0}
+.navy-head .act-facts dt{color:#93a4be}
+.navy-head .act-facts dd{color:#fff}
+.navy-head .deadline-danger{color:#ff9c95}
+/* переключатели на тёмной шапке */
+.navy-head :is(.queue-switch,.doc-type-switch)>button:not(.zz):not(.zy){color:#c9d2e0!important}
+.navy-head :is(.queue-switch,.doc-type-switch)>button>svg{border-color:rgb(255 255 255 / .22);background:rgb(255 255 255 / .05);color:#c9d2e0}
+.navy-head :is(.queue-switch,.doc-type-switch)>button:hover:not(:disabled):not([aria-pressed=true]){background:rgb(255 255 255 / .06)!important;color:#fff!important}
+.navy-head :is(.queue-switch,.doc-type-switch)>button:hover:not(:disabled)>svg{border-color:#6d8fd9;color:#fff}
+.navy-head :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]:not(.zz):not(.zy){background:rgb(91 127 208 / .22)!important;border-color:#6d8fd9!important;color:#fff!important;box-shadow:0 0 0 1px rgb(109 143 217 / .15),0 0 12px rgb(91 127 208 / .30)!important}
+.navy-head :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]>svg{border-color:#8fb0ff;color:#fff;background:rgb(91 127 208 / .25);box-shadow:0 0 10px rgb(120 160 240 / .55);filter:drop-shadow(0 0 2px rgb(160 190 255 / .8))}
+.navy-head .tab-count{background:rgb(255 255 255 / .14)!important;color:#fff!important}
+.navy-head .primary-button{background:#fff!important;color:var(--menu)!important}
+/* заголовки блоков «Данные» и «Печать» */
+.data-block>.data-title,.upload-block .preparation-controls>.panel-subtitle{background:var(--menu);color:#fff!important;margin:-14px -16px 14px!important;padding:10px 16px!important;border-radius:9px 9px 0 0;font-size:var(--fs-m)!important}
+.data-block>.data-title svg,.upload-block .preparation-controls>.panel-subtitle svg{color:#8fb0ff!important;filter:drop-shadow(0 0 2px rgb(120 160 240 / .6))}
+.data-block>.data-title small{color:#93a4be}
+.data-block>.data-title .card-missing{color:#ff9c95}
+.reference-books>.reference-head{--pad:18px}
+.service-menu>.navy-head{margin-bottom:0}
+
+/* ══ Шапки разделов «История» и «Матрица» — тёмно-синие, как у остальных карточек ══ */
+.doc-panel>.timeline-panel,.doc-panel>.approval-matrix{background:var(--surface);border:1px solid var(--line)!important;border-radius:var(--r-m);overflow:hidden;padding:0 18px 18px!important;margin:0;max-width:none;box-shadow:none}
+.doc-panel>.timeline-panel>.section-heading,.doc-panel>.approval-matrix>.matrix-toolbar{display:flex;align-items:center!important;justify-content:space-between;gap:12px;margin:0 -18px 18px!important;padding:12px 18px;background:var(--menu);color:#fff;border-radius:9px 9px 0 0}
+.doc-panel>.timeline-panel>.section-heading .eyebrow{color:#93a4be;margin:0 0 2px}
+.doc-panel>.timeline-panel>.section-heading h3,.doc-panel>.approval-matrix>.matrix-toolbar h3{margin:0;color:#fff;font-size:var(--fs-l)}
+.doc-panel>.timeline-panel>.section-heading .count-label{background:rgb(255 255 255 / .14);color:#fff;border-radius:999px;padding:3px 10px}
+.doc-panel>.approval-matrix>.matrix-toolbar .link{color:#fff;border:1px solid rgb(255 255 255 / .3);border-radius:999px;padding:5px 12px}
+.doc-panel>.approval-matrix>.matrix-toolbar .link:hover{background:rgb(255 255 255 / .1)}
+
+/* ══ Реестр (08.11.2026): прозрачные карточки, только контур по статусу; внутри — аккуратная подсветка ══ */
+.registry-table-card{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+.registry-table-card .registry-scroll{border-radius:0;padding:0 4px 6px}
+.simple-registry{border-collapse:separate!important;border-spacing:0 8px!important;background:transparent!important}
+.simple-registry thead th{background:transparent!important;border:0!important;color:var(--muted)!important;font-size:var(--fs-xs)!important;text-transform:uppercase;letter-spacing:.06em;padding:4px 12px!important}
+.simple-registry tbody tr.reg-row{--tone:#8a96a0;--tone-soft:rgb(138 150 160 / .16)}
+.simple-registry tbody tr.reg-wait{--tone:#e08a1e;--tone-soft:rgb(224 138 30 / .16)}
+.simple-registry tbody tr.reg-bad{--tone:#d14343;--tone-soft:rgb(209 67 67 / .14)}
+.simple-registry tbody tr.reg-ok{--tone:#2e8b4a;--tone-soft:rgb(46 139 74 / .15)}
+.simple-registry tbody tr.reg-row>td{background:transparent!important;border:0!important;border-top:1.5px solid var(--tone)!important;border-bottom:1.5px solid var(--tone)!important;padding:12px!important;color:var(--ink-2);box-shadow:none!important;transition:box-shadow .2s}
+.simple-registry tbody tr.reg-row>td:first-child{border-left:1.5px solid var(--tone)!important;border-radius:14px 0 0 14px}
+.simple-registry tbody tr.reg-row>td:last-child{border-right:1.5px solid var(--tone)!important;border-radius:0 14px 14px 0}
+.simple-registry tbody tr.reg-row:hover>td{background:var(--tone-soft)!important}
+.simple-registry tbody tr.reg-row.registry-row-overdue>td{border-style:solid!important}
+/* содержимое */
+.simple-registry td:first-child{font-weight:600;color:var(--ink)!important}
+.simple-registry .registry-number{position:static!important;background:transparent!important;border-left:0!important;min-width:150px;max-width:none}
+.simple-registry .registry-number a b{display:block;font-size:var(--fs-m)!important;font-weight:700;color:var(--ink)!important;letter-spacing:.01em}
+.simple-registry .registry-number a small{display:inline-flex!important;align-items:center;margin-top:4px!important;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2)!important;font-size:12px;background:var(--surface)}
+.simple-registry tbody tr.reg-row:hover .registry-number a b{color:var(--brand)!important}
+.simple-registry td[data-label="Дата договора"]{color:var(--ink)!important;font-variant-numeric:tabular-nums}
+.simple-registry .stage-caption{color:var(--ink-2)!important;font-weight:600}
+/* этапы маршрута — маленькие чипы с контуром */
+.simple-registry .mini-step{border:1px solid var(--line)!important;background:var(--surface)!important;border-radius:999px!important;padding:2px 8px!important;color:var(--ink-2)}
+.simple-registry .mini-step.flow-completed{border-color:#9fd0ad!important;color:#1f6b36}
+.simple-registry .mini-step.flow-active{border-color:var(--brand)!important;color:var(--brand);box-shadow:0 0 6px var(--glow-soft)}
+.simple-registry .mini-step.flow-returned{border-color:#efb7b3!important;color:var(--red)}
+/* статус — в цвет контура */
+.simple-registry .status-badge{background:transparent!important;border:1.5px solid var(--tone)!important;color:var(--tone)!important;border-radius:999px!important;padding:3px 10px!important;margin:0!important}
+.simple-registry tbody tr.reg-wait .status-badge{color:#b5650a!important}
+.simple-registry td[data-label="Статус"] small{color:var(--ink-2)!important}
+.simple-registry td[data-label="Статус"] small.deadline-danger{color:var(--red)!important;font-weight:600}
+/* кнопки действий — значок в рамке */
+.simple-registry .simple-actions .icon-button,.simple-registry .row-more summary{width:34px;height:34px;padding:0!important;display:grid!important;place-items:center;border:1.5px solid var(--line)!important;border-radius:10px!important;background:var(--surface)!important;color:var(--ink-2)!important;transition:border-color .2s,box-shadow .2s,color .2s}
+.simple-registry .simple-actions .icon-button:hover:not(:disabled),.simple-registry .row-more summary:hover,.simple-registry .row-more[open] summary{border-color:var(--brand)!important;color:var(--brand)!important;box-shadow:0 0 0 1px var(--glow-soft),0 0 10px var(--glow-soft)}
+@media(max-width:850px){
+ .simple-registry tbody tr.reg-row{display:block;margin:0 0 10px;border:1.5px solid var(--tone);border-radius:14px;background:transparent}
+ .simple-registry tbody tr.reg-row:hover{background:var(--tone-soft)}
+ .simple-registry tbody tr.reg-row>td,.simple-registry tbody tr.reg-row>td:first-child,.simple-registry tbody tr.reg-row>td:last-child{border:0!important;border-radius:0;background:transparent!important}
+}
+
+/* ══ 08.11.2026 (днём): вкладки «Все документы» — контур у каждой кнопки, свечение в цвет раздела ══ */
+.document-tabs>button:not(.zz):not(.zy){border-color:var(--line)!important;background:var(--surface)!important}
+.document-tabs>button{--tab:var(--brand);--tab-fill:var(--sel-fill);--tab-glow:var(--glow);--tab-glow-soft:var(--glow-soft)}
+.document-tabs>button[data-tab=progress]{--tab:#d97a0c;--tab-fill:rgb(224 138 30 / .12);--tab-glow:rgb(224 138 30 / .55);--tab-glow-soft:rgb(224 138 30 / .2)}
+.document-tabs>button[data-tab=corrections]{--tab:#d14343;--tab-fill:rgb(209 67 67 / .10);--tab-glow:rgb(209 67 67 / .5);--tab-glow-soft:rgb(209 67 67 / .18)}
+.document-tabs>button[data-tab=approved]{--tab:#2e8b4a;--tab-fill:rgb(46 139 74 / .11);--tab-glow:rgb(46 139 74 / .5);--tab-glow-soft:rgb(46 139 74 / .18)}
+.document-tabs>button:hover:not(:disabled):not([aria-pressed=true]){border-color:var(--tab)!important;color:var(--tab)!important;background:var(--surface)!important}
+.document-tabs>button:hover:not(:disabled)>svg{border-color:var(--tab);color:var(--tab)}
+.document-tabs>button[aria-pressed=true]:not(.zz):not(.zy){background:var(--tab-fill)!important;border-color:var(--tab)!important;color:var(--tab)!important;box-shadow:0 0 0 1px var(--tab-glow-soft),0 0 12px var(--tab-glow-soft)!important}
+.document-tabs>button[aria-pressed=true]>svg{border-color:var(--tab);color:var(--tab);box-shadow:0 0 0 1px var(--tab-glow-soft),0 0 10px var(--tab-glow);filter:drop-shadow(0 0 1.5px var(--tab-glow))}
+
+/* ══ Счётчики — квадратные метки ══ */
+.tab-count,.main-sidebar nav button>b,.doc-tab-badge,.bell-button b{border-radius:6px!important}
+.document-tabs .tab-count{min-width:24px;height:24px;font-size:13px!important}
+.document-tabs>button[aria-pressed=true] .tab-count:not(.is-zero){background:var(--tab)!important;color:#fff!important}
+
+/* ══ Реестр: крупнее и читабельнее, важное подсвечено ══ */
+.simple-registry tbody tr.reg-row>td{padding:16px 14px!important;font-size:var(--fs-m)!important;vertical-align:middle}
+.simple-registry thead th{font-size:12px!important;padding:6px 14px!important}
+.simple-registry td:first-child{font-size:var(--fs-m)!important}
+.simple-registry .registry-number a b{font-size:17px!important;font-variant-numeric:tabular-nums}
+.simple-registry .registry-number a small{font-size:13px!important;padding:2px 10px;margin-top:6px!important}
+.simple-registry td[data-label="Дата договора"]{font-size:var(--fs-m)!important;font-weight:600}
+.simple-registry .mini-route{font-size:13px!important;gap:6px!important}
+.simple-registry .mini-step{padding:4px 10px!important;font-size:13px!important;font-weight:600}
+.simple-registry .mini-step svg{width:14px;height:14px}
+.simple-registry .stage-caption{font-size:var(--fs-m)!important;margin-top:8px!important;color:var(--ink)!important}
+.simple-registry .stage-caption::before{content:"Сейчас: ";font-weight:500;color:var(--muted)}
+.simple-registry .status-badge{font-size:var(--fs-s)!important;padding:5px 12px!important;font-weight:700}
+.simple-registry .status-badge svg{width:16px;height:16px}
+.simple-registry td[data-label="Статус"] small{font-size:var(--fs-s)!important;margin-top:8px!important;font-weight:600}
+.simple-registry td[data-label="Статус"] small.deadline-danger{display:inline-flex!important;align-items:center;gap:5px;padding:2px 8px;border-radius:6px;background:var(--red-soft)}
+.simple-registry .simple-actions .icon-button,.simple-registry .row-more summary{width:40px;height:40px}
+.simple-registry .simple-actions svg{width:20px;height:20px}
+.simple-registry td small.reg-remarks{display:inline-flex!important;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;border:1px solid #efb7b3;background:var(--red-soft);color:var(--red)!important}
+
+/* ══ Доработка: плашка в «Просмотре» ══ */
+.rework-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 12px;padding:12px 16px;border:1.5px solid #d14343;border-radius:14px;background:rgb(209 67 67 / .06)}
+.rework-banner.is-uploaded{border-color:#e08a1e;background:rgb(224 138 30 / .07)}
+.rework-icon{width:38px;height:38px;flex:none;display:grid;place-items:center;border:1.5px solid currentColor;border-radius:11px;color:#d14343;box-shadow:0 0 10px rgb(209 67 67 / .3)}
+.rework-banner.is-uploaded .rework-icon{color:#d97a0c;box-shadow:0 0 10px rgb(224 138 30 / .3)}
+.rework-text{flex:1;min-width:260px;display:flex;flex-direction:column;gap:2px;font-size:var(--fs-m);color:var(--ink-2)}
+.rework-text>b{font-size:var(--fs-l);color:var(--ink)}
+.rework-banner .file-button,.rework-banner .primary-button,.rework-banner .secondary-button{display:inline-flex;align-items:center;gap:8px;padding:9px 16px!important;cursor:pointer}
+.review-report textarea{border-color:#e08a1e!important}
+/* счётчик на выбранной вкладке режима проверки читается */
+.review-tabs button[aria-selected=true] b,.review-subtabs button[aria-pressed=true] b{background:var(--brand)!important;color:#fff!important;border-radius:6px!important}
+.rework-banner .file-button{flex-direction:row!important;white-space:nowrap;border-radius:999px}
+
+/* ══ Новый документ: одно окно — строки «название · файл · загрузить» (08.11.2026) ══ */
+.engineer-upload>.upload-head{display:flex;flex-direction:column;gap:4px;padding:14px 20px}
+.upload-head-title{display:flex;align-items:center;gap:10px;font-size:var(--fs-xl);font-weight:700;color:#fff}
+.upload-head-title svg{color:#8fb0ff;filter:drop-shadow(0 0 3px rgb(120 160 240 / .6))}
+.upload-head-help{display:flex;align-items:center;gap:7px;font-size:var(--fs-s);color:#b8c4d8}
+.upload-head-help svg{flex:none;color:#ffcf7a}
+.engineer-upload .upload-modes{margin:4px 0 2px}
+.file-list{display:flex;flex-direction:column;margin:14px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.file-list-caption{padding:9px 16px;background:var(--paper);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.file-list .file-row+.file-list-caption{border-top:1px solid var(--line)}
+.file-tile.file-row{display:grid!important;grid-template-columns:30px minmax(170px,240px) auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 16px!important;border:0!important;border-bottom:1px solid var(--line-2)!important;border-radius:0!important;background:transparent!important;flex-direction:row}
+.file-list>.file-row:last-child{border-bottom:0!important}
+.file-row:hover{background:rgb(49 86 163 / .03)!important}
+.file-row-icon{width:30px;height:30px;display:grid;place-items:center;border:1.5px solid var(--line);border-radius:9px;color:var(--ink-2)}
+.file-row .file-tile-title{display:flex;align-items:baseline;gap:8px;font-size:var(--fs-m)!important;font-weight:700!important;color:var(--ink)!important}
+.file-row .file-tile-title small{margin:0!important}
+.file-row-extra .act-kind{margin:0}
+.file-row .file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-s);color:var(--muted)}
+.file-row .file-button{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:7px;white-space:nowrap;padding:8px 16px!important;justify-self:end;cursor:pointer}
+.file-tile-ready.file-row{background:rgb(46 139 74 / .05)!important}
+.file-tile-ready .file-row-icon{border-color:#2e8b4a;color:#2e8b4a;box-shadow:0 0 8px rgb(46 139 74 / .3)}
+.file-tile-ready .file-name{color:var(--ink);font-weight:600}
+.file-tile-optional .file-tile-title{font-weight:600!important}
+@media(max-width:760px){
+ .file-tile.file-row{grid-template-columns:30px minmax(0,1fr) auto;grid-template-areas:"i t b" "x x x" "n n n"}
+ .file-row-icon{grid-area:i}.file-row .file-tile-title{grid-area:t}.file-row .file-button{grid-area:b}.file-row-extra{grid-area:x}.file-row .file-name{grid-area:n}
+}
+@media(min-width:761px){
+ .file-tile.file-row{grid-template-columns:30px minmax(170px,240px) auto minmax(0,1fr) 170px;grid-template-areas:"i t x n b"}
+ .file-row-icon{grid-area:i}.file-row .file-tile-title{grid-area:t}.file-row-extra{grid-area:x}.file-row .file-name{grid-area:n}.file-row .file-button{grid-area:b;justify-self:stretch;justify-content:center}
+}
+/* «Технические данные» — тёмная шапка; подзаголовки списка документов подсвечены */
+.engineer-upload .upload-card{padding:0 16px 16px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface)!important;overflow:hidden}
+.tech-head{margin:0 -16px 14px;padding:12px 16px;background:var(--menu);color:#fff}
+.tech-head h3{display:flex;align-items:center;gap:8px;margin:0 0 3px!important;font-size:var(--fs-l)!important;color:#fff}
+.tech-head h3 svg{color:#8fb0ff;filter:drop-shadow(0 0 3px rgb(120 160 240 / .6))}
+.tech-head p{margin:0;font-size:var(--fs-s);color:#b8c4d8}
+.file-list-caption{display:flex;align-items:center;gap:8px;padding:10px 16px!important;font-size:13px!important;letter-spacing:.04em!important;color:var(--brand)!important;background:var(--brand-soft)!important;border-left:4px solid var(--brand)}
+.file-list-caption::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brand);box-shadow:0 0 6px var(--glow)}
+.file-list-caption+.file-tile-optional,.file-list-caption:not(:first-child){}
+.file-list>.file-list-caption:not(:first-child){color:#5d6b78!important;background:var(--paper)!important;border-left-color:#8a96a0}
+.file-list>.file-list-caption:not(:first-child)::before{background:#8a96a0;box-shadow:none}
+
+/* ══ 09.11.2026: панель просмотра в одну строку — значки в рамке со свечением, поиск с подсказкой в поле ══ */
+.word-tools.viewer-tools{display:flex!important;align-items:center!important;flex-wrap:nowrap;gap:8px!important;padding:6px 8px!important;background:var(--surface)!important;border-bottom:1px solid var(--line)}
+.viewer-tools .zoom-control{display:inline-flex;gap:4px!important;padding:0!important;border:0!important;background:transparent!important;align-self:center}
+.viewer-tools .tool-icon{width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;display:grid!important;place-items:center;border:1.5px solid var(--line)!important;border-radius:10px!important;background:var(--surface)!important;color:var(--ink-2)!important;cursor:pointer;transition:border-color .2s,box-shadow .2s,color .2s;margin:0!important}
+.viewer-tools .tool-icon:hover:not(:disabled){border-color:var(--brand)!important;color:var(--brand)!important;box-shadow:0 0 0 1px var(--glow-soft),0 0 10px var(--glow-soft)}
+.viewer-tools .tool-icon:hover:not(:disabled) svg{filter:drop-shadow(0 0 2px var(--glow))}
+.viewer-tools .tool-icon:disabled{opacity:.4;cursor:not-allowed}
+.viewer-tools .page-select{flex:none;width:auto!important;height:34px;padding:0 8px!important;border:1.5px solid var(--line)!important;border-radius:10px!important;background:var(--surface);font-weight:600}
+.viewer-search{flex:1;min-width:120px;display:flex!important;flex-direction:row!important;align-items:center;gap:6px;height:34px;padding:0 3px 0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);margin:0!important}
+.viewer-search:focus-within{border-color:var(--brand);box-shadow:0 0 0 1px var(--glow-soft),0 0 10px var(--glow-soft)}
+.viewer-search input{flex:1;min-width:0;border:0!important;outline:none;background:transparent!important;padding:0!important;font-size:var(--fs-s);box-shadow:none!important}
+.viewer-search .tool-icon{width:28px!important;min-width:28px!important;height:28px!important;border-radius:8px!important}
+.viewer-hits{font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+
+/* строка документа: контур у всех кнопок, «Режим проверки» — отдельная крупная кнопка справа */
+.doc-tab:not([aria-pressed=true]){border-color:var(--line)!important;background:var(--surface)!important}
+.doc-bar .text-button{border:1.5px solid var(--line)!important;border-radius:12px!important;background:var(--surface)!important}
+.doc-bar .text-button:hover:not(:disabled){border-color:var(--brand)!important;box-shadow:0 0 0 1px var(--glow-soft),0 0 10px var(--glow-soft)}
+.doc-bar .doc-picker select{border-width:1.5px!important;border-radius:12px!important}
+.doc-bar .word-meta{padding:4px 10px!important;border:1px dashed var(--line)!important;border-radius:10px}
+.doc-bar .review-launch{order:99;margin-left:auto;padding:11px 22px!important;font-size:var(--fs-m)!important;border-radius:14px!important;box-shadow:0 0 0 1px var(--glow-soft),0 4px 14px rgb(49 86 163 / .35)!important}
+
+/* режим проверки: кнопка сворачивания панели заметна, легенда под вкладками справа */
+.review-side-head .review-collapse{width:34px;height:34px;display:grid;place-items:center;border:1.5px solid var(--brand,#3156a3)!important;border-radius:10px!important;background:rgb(49 86 163 / .06)!important;color:var(--brand,#3156a3)!important;cursor:pointer;box-shadow:0 0 8px rgb(49 86 163 / .2)}
+.review-side-head .review-collapse:hover{box-shadow:0 0 0 1px rgb(49 86 163 / .2),0 0 12px rgb(49 86 163 / .4)}
+.review-side>.review-legend{margin:0;padding:8px 12px;border-bottom:1px solid #e3e9ee;background:#fafbfd;display:flex;flex-wrap:wrap;gap:4px 12px}
+.doc-bar .word-heading-spacer{order:96;flex:1 1 0!important;min-width:0}
+.doc-bar .task-deadline{order:97}
+.doc-bar .word-review-actions,.doc-bar .send-wrap{order:98}
+.doc-bar .review-launch{margin-left:0!important}
+.doc-bar-actions{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px 10px}
+
+/* 09.11.2026: ход сохранения нового документа, «Документ учтён» и предупреждение о дубле номера договора. */
+.upload-progress{list-style:none;margin:14px 0;padding:6px 0;border:1px solid var(--line);border-radius:10px;background:#fff;display:grid}
+.up-step{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 16px;font-size:14px;color:#5d6b78}
+.up-step+.up-step{border-top:1px dashed var(--line)}
+.up-mark{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;border:1.5px solid #c3ccd5;color:#fff}
+.up-run{color:var(--ink,#1d2b3a);font-weight:600}
+.up-run .up-mark{border-color:var(--brand);box-shadow:0 0 8px var(--glow)}
+.up-spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--brand);border-right-color:transparent;animation:up-spin .8s linear infinite}
+@keyframes up-spin{to{transform:rotate(360deg)}}
+.up-done{color:#1f5f3a}
+.up-done .up-mark{background:#2e8b57;border-color:#2e8b57;box-shadow:0 0 8px rgba(46,139,87,.45)}
+.up-fail{color:#9b2c22;font-weight:600}
+.up-fail .up-mark{background:#c4554a;border-color:#c4554a}
+.up-note{font-size:12px;color:inherit;opacity:.85;text-align:right;max-width:420px}
+.upload-done{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0;padding:14px 18px;border:1.5px solid #2e8b57;border-radius:10px;background:rgba(46,139,87,.07);box-shadow:inset 0 0 18px rgba(46,139,87,.12)}
+.upload-done-mark{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;background:#2e8b57;color:#fff;box-shadow:0 0 12px rgba(46,139,87,.5);animation:up-pop .35s ease-out}
+@keyframes up-pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.upload-done-text{flex:1 1 220px;display:grid;gap:2px}
+.upload-done-text b{font-size:16px;color:#1f5f3a}
+.upload-done-text small{font-size:13px;color:#3d4c5a}
+.upload-done-count{display:inline-grid;place-items:center;min-width:24px;height:22px;padding:0 6px;border-radius:5px;background:#2e8b57;color:#fff;font-size:13px}
+.dup-warning{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:14px 0;padding:14px 18px;border:1.5px solid #c4554a;border-radius:10px;background:rgba(196,85,74,.06);color:#7f2a20}
+.dup-warning>svg{flex:none;margin-top:2px}
+.dup-text{flex:1 1 260px;display:grid;gap:3px}
+.dup-text b{font-size:15px}
+.dup-text p{margin:0;font-size:13px;color:#3d4c5a}
+.dup-text small{font-size:12px;color:#7f2a20}
+.dup-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media (prefers-reduced-motion:reduce){.up-spin,.upload-done-mark{animation:none}}
+
+/* 09.11.2026: «Синхронизация» с «Учёт ПУ» — список договоров с отметкой синхронизации. */
+.sync-panel{padding:18px}
+.sync-panel>.sync-head{--pad:18px;display:grid;gap:4px}
+.sync-title{display:flex;align-items:center;gap:10px;font-size:18px}
+.sync-help{font-size:13px;color:#c9d6ea}
+.sync-off{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:10px 14px;border:1px dashed #c98a2e;border-radius:8px;background:rgba(201,138,46,.07);color:#7a4f12;font-size:13px}
+.sync-tabs{margin:4px 0 12px}
+.sync-tabs [data-sync=SYNCED][aria-pressed=true]{border-color:#2e8b57!important;box-shadow:0 0 10px rgba(46,139,87,.35)!important}
+.sync-tabs [data-sync=CHANGED][aria-pressed=true]{border-color:#c98a2e!important;box-shadow:0 0 10px rgba(201,138,46,.35)!important}
+.sync-filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.sync-search{flex:1 1 320px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:#5d6b78}
+.sync-search input{flex:1;border:0!important;outline:0;box-shadow:none!important;padding:10px 0!important;background:transparent;min-width:0}
+.sync-search:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--glow-soft)}
+.sync-res select{min-width:200px;height:100%}
+.sync-list{display:grid;gap:10px}
+.sync-list[aria-busy=true]{opacity:.65}
+.sync-empty{padding:28px;text-align:center;color:#5d6b78;border:1px dashed var(--line);border-radius:10px}
+.sync-row{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(220px,1.4fr) minmax(190px,auto);gap:10px 18px;align-items:center;padding:14px 16px;border:1.5px solid #c3ccd5;border-radius:10px;background:transparent}
+.sync-row.sync-synced{border-color:#2e8b57;box-shadow:inset 0 0 14px rgba(46,139,87,.08)}
+.sync-row.sync-changed{border-color:#c98a2e;box-shadow:inset 0 0 14px rgba(201,138,46,.1)}
+.sync-main{display:grid;gap:3px;min-width:0}
+.sync-number{justify-self:start;padding:0;border:0;background:none;font-size:17px;font-weight:700;color:var(--brand);cursor:pointer;font-variant-numeric:tabular-nums}
+.sync-number:hover{text-decoration:underline}
+.sync-meta{font-size:13px;color:#3d4c5a}
+.sync-who{font-size:13px;color:#5d6b78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync-tech{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sync-chip{padding:4px 9px;border:1px solid #b9cbe6;border-radius:6px;background:var(--brand-soft);color:#1d3e78;font-size:13px;font-weight:600}
+.sync-tu{font-size:12px;color:#5d6b78}
+.sync-missing{color:#a0472f;font-size:12px}
+.sync-state{display:flex;align-items:center;gap:10px;justify-self:end;text-align:left}
+.sync-state b{display:block;font-size:14px}
+.sync-state small{display:block;font-size:12px;color:#5d6b78}
+.sync-mark{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;border:1.5px solid #9aa6b2;color:#5d6b78}
+.sync-synced .sync-mark{background:#2e8b57;border-color:#2e8b57;color:#fff;box-shadow:0 0 10px rgba(46,139,87,.45)}
+.sync-synced .sync-state b{color:#1f5f3a}
+.sync-changed .sync-mark{border-color:#c98a2e;color:#a86812;box-shadow:0 0 10px rgba(201,138,46,.35)}
+.sync-changed .sync-state b{color:#8a5410}
+.sync-not_synced .sync-state b{color:#5d6b78}
+.sync-pages{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px}
+@media (max-width:900px){.sync-row{grid-template-columns:1fr}.sync-state{justify-self:start}}
+.pu-sync-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid}
+.pu-sync-chip.pu-synced{border-color:#5fbf8a;color:#bff0d3;background:rgba(46,139,87,.25)}
+.pu-sync-chip.pu-changed{border-color:#e0a54d;color:#ffe2b3;background:rgba(201,138,46,.22)}
+.sync-tabs .tab-count{display:inline-grid;place-items:center;min-width:22px;height:20px;padding:0 5px;margin-left:4px;border-radius:5px;background:#e7ecf2;color:#3d4c5a;font-size:12px}
+.sync-tabs .tab-count.is-zero{opacity:.55}
+.sync-tabs [aria-pressed=true] .tab-count{background:var(--brand);color:#fff}
+.sync-tabs [data-sync=SYNCED] .tab-count:not(.is-zero){background:#2e8b57;color:#fff}
+.sync-tabs [data-sync=CHANGED] .tab-count:not(.is-zero){background:#c98a2e;color:#fff}
+
+/* 09.11.2026: документы в загруженном файле (вид по заголовку, скреплённые — раздельно), справочники tg и доверенностей. */
+.doc-parts{display:grid;gap:6px;padding:10px 16px 12px 58px;border-bottom:1px solid var(--line);background:#fbfcfe}
+.doc-parts-wait{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;color:#5d6b78}
+.doc-part{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 12px;border:1.5px solid #2e8b57;border-radius:8px;background:rgba(46,139,87,.05)}
+.doc-part-guess{border-color:#c98a2e;background:rgba(201,138,46,.06)}
+.doc-part-mark{width:22px;height:22px;flex:none;border-radius:6px;display:grid;place-items:center;background:#2e8b57;color:#fff}
+.doc-part-guess .doc-part-mark{background:#c98a2e}
+.doc-part-name{display:grid;gap:1px;flex:1 1 240px}
+.doc-part-name b{font-size:14px;color:#1d2b3a}
+.doc-part-name small{font-size:12px;color:#5d6b78}
+.doc-part-pick{display:flex;align-items:center;gap:10px;flex:1 1 240px;font-size:13px;color:#7a4f12}
+.doc-part-pick select{min-width:160px}
+.doc-part-pages{font-size:12px;font-weight:600;color:#3d4c5a;padding:2px 8px;border:1px solid var(--line);border-radius:5px;background:#fff}
+.doc-parts-note{font-size:12px;color:#1d3e78}
+.other-book{margin-top:6px}
+.other-table td,.other-table th{text-align:left}
+.tu-open-psu{margin:6px 0 0;font-size:12px}
+.tu-match-label .tu-open-psu{margin:0 0 0 8px;padding:0 4px}
+.engineer-upload .field-source{color:#1f5f3a;font-weight:600}

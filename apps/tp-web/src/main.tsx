@@ -1,0 +1,15 @@
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.js';
+import './tokens.css';
+import './style.css';
+import './registry.css';
+import './word.css';
+import './practical.css';
+import './engineer.css';
+import './workspace.css';
+import './theme.css';
+import './doctabs.css';
+import {startSlidingPills} from './sliding-pills.js';
+createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+startSlidingPills();

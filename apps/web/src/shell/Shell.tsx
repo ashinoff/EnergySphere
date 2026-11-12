@@ -4,6 +4,10 @@ import { useAuth, useMe } from '../auth/AuthContext.js';
 import { ADMIN_MENU, MODULES, moduleById, type MenuItem, type ModuleMeta } from '../modules/registry.js';
 import { ModulePage } from '../modules/ModulePage.js';
 import { AnalysisHost } from '../modules/analysis/AnalysisHost.js';
+import { TP_FRAME_PAGES, TpHost } from '../modules/tp/TpHost.js';
+
+// Страницы, которые показывает фрейм модуля (остальные — обычные страницы Сферы).
+const isFramePage = (module: string, page: string) => module === 'analysis' || (module === 'tp' && TP_FRAME_PAGES.has(page));
 import { AdminPage } from '../admin/AdminPage.js';
 import { IconArrowLeft, IconArrowRight, IconLock, IconSettings } from '../ui/icons.js';
 import { useToast } from '../ui/kit.js';
@@ -100,15 +104,22 @@ export function Shell() {
 
   const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i => !i.perm || i.perm === view || can(i.perm));
 
-  // Анализатор создаётся при первом открытии модуля и дальше не пересоздаётся,
-  // чтобы загруженный файл переживал переходы по разделам.
-  const inAnalysis = effective.view === 'module' && effective.id === 'analysis';
-  const analysisPage = inAnalysis ? effective.page : '';
-  const [analysisSeen, setAnalysisSeen] = useState(false);
-  useEffect(() => { if (inAnalysis) setAnalysisSeen(true); }, [inAnalysis]);
-  const analysisModule = moduleById('analysis')!;
-  const lastAnalysisPage = useRef('rank');
-  if (analysisPage) lastAnalysisPage.current = analysisPage;
+  // Модули-фреймы (анализатор, акты ТП) создаются при первом открытии и дальше
+  // не пересоздаются: загруженный файл и состояние переживают переходы по разделам.
+  const framePage = effective.view === 'module' && isFramePage(effective.id, effective.page) ? effective : null;
+  const [framesSeen, setFramesSeen] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (framePage && !framesSeen[framePage.id]) setFramesSeen(seen => ({ ...seen, [framePage.id]: true }));
+  }, [framePage, framesSeen]);
+  // Последний раздел фрейма — отдельно от «последней страницы модуля»: уход на
+  // обычную страницу модуля (например, «Создание акта по ТУ») не двигает фрейм.
+  const lastFramePages = useRef<Record<string, string>>({});
+  if (framePage) lastFramePages.current[framePage.id] = framePage.page;
+  const frameItem = (id: ModuleId) => {
+    const m = moduleById(id)!;
+    const pageId = lastFramePages.current[id];
+    return m.menu.find(i => i.id === pageId && isFramePage(id, i.id)) ?? m.menu.find(i => isFramePage(id, i.id))!;
+  };
 
   return (
     <div className="app">
@@ -179,12 +190,12 @@ export function Shell() {
           </div>
         </section>
 
-        <div className={`content ${inAnalysis ? 'content--frame' : ''}`} style={content}>
-          {analysisSeen && (
-            <AnalysisHost module={analysisModule} visible={inAnalysis}
-              page={analysisModule.menu.find(i => i.id === lastAnalysisPage.current) ?? analysisModule.menu[0]} />
+        <div className={`content ${framePage ? 'content--frame' : ''}`} style={content}>
+          {framesSeen.analysis && (
+            <AnalysisHost module={moduleById('analysis')!} visible={framePage?.id === 'analysis'} page={frameItem('analysis')} />
           )}
-          {effective.view === 'module' && activeModule && !inAnalysis && (
+          {framesSeen.tp && <TpHost key={me.id} module={moduleById('tp')!} visible={framePage?.id === 'tp'} page={frameItem('tp')} />}
+          {effective.view === 'module' && activeModule && !framePage && (
             <div className="content__inner" key={`${effective.id}/${effective.page}`}>
               <ModulePage module={activeModule} page={visibleMenu(activeModule.menu, activeModule.view).find(i => i.id === effective.page)
                 ?? activeModule.menu[0]} />

@@ -1,0 +1,110 @@
+// Импортировано из TP_Approval (scripts/import-tp.mjs). Не править вручную.
+import {readFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {XMLParser} from 'fast-xml-parser';
+import {diffWordsWithSpace} from 'diff';
+import {z} from 'zod';
+import {validateDocx} from './files.js';
+import {isPdf,pdfModel} from './pdf-model.js';
+import {HttpError,requireValue,type DB} from './db.js';
+import {audit,lockAct,role} from './workflow.js';
+/** Position of a paragraph inside a Word table: table index within the part, row and cell. */
+export type TableCell={table:number;row:number;cell:number};
+/**
+ * One Word paragraph. `id` is `<part>:p:<index>` and must stay stable: saved remark anchors refer to it.
+ * `table` and `numbering` are optional reading aids for the requisite rules and never affect the id.
+ */
+export type Block={id:string;part:string;text:string;sha256:string;table?:TableCell;numbering?:{level:number}};
+/** Основной текст документа: тело DOCX или страница PDF (колонтитулы DOCX — отдельно). */
+export const isBody=(part:string)=>part==='word/document.xml'||part.startsWith('pdf/');
+const hash=(s:string|Buffer)=>createHash('sha256').update(s).digest('hex');
+type XmlNode=Record<string,any>;
+const childNodes=(nodes:XmlNode[],name:string)=>nodes.filter(n=>Array.isArray(n[name])).map(n=>n[name] as XmlNode[]);
+/** Word list level (w:pPr/w:numPr/w:ilvl) of a paragraph, if the paragraph is numbered directly. */
+function numberingLevel(paragraph:XmlNode[]):number|undefined{
+ for(const properties of childNodes(paragraph,'w:pPr')){
+  for(const numbering of childNodes(properties,'w:numPr')){
+   const level=numbering.find(n=>Array.isArray(n['w:ilvl']));
+   const value=Number(level?.[':@']?.['@_w:val']??0);
+   return Number.isInteger(value)&&value>=0?value:0;
+  }
+ }
+ return undefined;
+}
+export function xmlBlocks(xml:string,part:string):Block[]{
+ const tree=new XMLParser({preserveOrder:true,ignoreAttributes:false,trimValues:false,parseTagValue:false}).parse(xml);const blocks:Block[]=[];
+ // Рамки схем записаны дважды: mc:Choice (DrawingML, с числовыми координатами фигур) и mc:Fallback (VML).
+ // Берём один вариант — Fallback, как его показывает просмотр; без Fallback — Choice.
+ const alternate=(kids:any[]):string=>{const fallback=kids.find(k=>k['mc:Fallback']);return fallback?content(fallback['mc:Fallback']):kids.filter(k=>k['mc:Choice']).map(k=>content(k['mc:Choice'])).slice(0,1).join('');};
+ // Абзацы внутри рамки (txbxContent) разделяются переносом: надписи соседних рамок схемы не склеиваются («ТП-А338» + «20202-…»).
+ const content=(nodes:any[]):string=>nodes.map(n=>n['mc:AlternateContent']?alternate(n['mc:AlternateContent']):n['w:p']?content(n['w:p'])+'\n':n['w:t']?content(n['w:t']):n['#text']!==undefined?String(n['#text']):n['w:tab']?'\t':n['w:br']||n['w:cr']?'\n':Object.entries(n).filter(([k])=>![':@','w:pPr','w:rPr','w:instrText','w:del','w:delText'].includes(k)).map(([,v])=>Array.isArray(v)?content(v):'').join('')).join('');
+ // The traversal order is the same as before table metadata existed, so block ids do not change.
+ let tables=0;
+ type TablePosition={table:number;row:number;cell:number};
+ const walk=(nodes:any[],position?:TablePosition)=>{
+  for(const n of nodes){
+   for(const [key,value]of Object.entries(n)){
+    if(!Array.isArray(value)||key==='w:del')continue;
+    if(key==='w:p'){
+     const text=content(value);
+     const block:Block={id:`${part}:p:${blocks.length}`,part,text,sha256:hash(text)};
+     if(position&&position.row>=0&&position.cell>=0)block.table={...position};
+     const level=numberingLevel(value);
+     if(level!==undefined)block.numbering={level};
+     blocks.push(block);
+    }else if(key==='w:tbl'){
+     walk(value,{table:tables++,row:-1,cell:-1});
+    }else if(key==='w:tr'&&position){
+     position.row++;position.cell=-1;walk(value,position);
+    }else if(key==='w:tc'&&position){
+     position.cell++;
+     // A nested table inside a cell gets its own position; the outer cell continues afterwards.
+     walk(value,position);
+    }else walk(value,position);
+   }
+  }
+ };
+ walk(tree);return blocks;
+}
+type DocumentModel={sha256:string;format:'docx'|'pdf';blocks:Block[];pages?:{width:number;height:number}[];boundaries?:unknown[]};
+async function buildModel(bytes:Buffer):Promise<DocumentModel>{
+ if(isPdf(bytes))return pdfModel(bytes);
+ const parts=await validateDocx(bytes);const blocks:Block[]=[];for(const [part,xml]of parts)if(/^word\/(document|header\d+|footer\d+)\.xml$/.test(part))blocks.push(...xmlBlocks(xml.toString('utf8'),part));return {sha256:hash(bytes),format:'docx',blocks};
+}
+// Модель зависит только от байтов файла (поданные версии неизменяемы), а разбор PDF — самая долгая часть открытия
+// документа и сверки: последние модели держим в памяти по хешу. Ошибка разбора не кэшируется.
+const models=new Map<string,Promise<DocumentModel>>();const MODEL_CACHE=40;
+export function documentModel(bytes:Buffer):Promise<DocumentModel>{
+ const key=hash(bytes);const hit=models.get(key);
+ if(hit){models.delete(key);models.set(key,hit);return hit;}
+ const built=buildModel(bytes);models.set(key,built);built.catch(()=>models.delete(key));
+ while(models.size>MODEL_CACHE)models.delete(models.keys().next().value!);
+ return built;
+}
+export const anchorSchema=z.object({kind:z.literal('OOXML_PARAGRAPH_V1'),part:z.string().max(100),blockId:z.string().max(150),blockHash:z.string().regex(/^[a-f0-9]{64}$/),fileHash:z.string().regex(/^[a-f0-9]{64}$/),start:z.number().int().min(0),end:z.number().int().min(1),quote:z.string().min(1).max(5000)}).strict();
+export function checkAnchor(model:{sha256:string;blocks:Block[]},anchor:z.infer<typeof anchorSchema>){const block=model.blocks.find(b=>b.id===anchor.blockId&&b.part===anchor.part);if(anchor.fileHash!==model.sha256||!block||block.sha256!==anchor.blockHash||anchor.end<=anchor.start||block.text.slice(anchor.start,anchor.end)!==anchor.quote||anchor.end>block.text.length)throw new HttpError(409,'ANCHOR_MISMATCH','Привязка не соответствует исходному DOCX. Выделите фрагмент заново.');}
+export async function versionSource(db:DB,storage:string,actId:string,versionId:string){
+ const v=requireValue((await db.query("SELECT v.*,f.sha256,f.id AS private_file_id FROM tp.versions v JOIN tp.files f ON f.id=v.file_id AND f.scan_status='READY' WHERE v.id=$1 AND v.act_id=$2",[versionId,actId])).rows[0]);
+ const bytes=await readFile(resolve(storage,v.private_file_id));if(hash(bytes)!==v.sha256)throw new HttpError(500,'FILE_INTEGRITY_FAILURE');return {version:v,bytes};
+}
+export async function preview(db:DB,storage:string,actId:string,versionId:string){const {version,bytes}=await versionSource(db,storage,actId,versionId);const model=await documentModel(bytes);await audit(db,actId,'DOCUMENT_VIEWED',{versionId,sha256:model.sha256,renderer:'DOCX_PREVIEW_PROTOTYPE'});return {...model,versionId,versionNumber:version.number,renderer:model.format==='pdf'?'PDFJS':'DOCX_PREVIEW_PROTOTYPE',limitations:['HTML-вёрстка приблизительная; не заменяет Word/ONLYOFFICE.','Автоматическая пагинация и поля PAGE не гарантируются.','Печать недоступна до проверки надёжного генератора.']};}
+export const remarkSchema=z.object({versionId:z.string().uuid(),taskId:z.string().uuid(),categoryId:z.string().uuid(),text:z.string().trim().min(1).max(10000),suggestedValue:z.string().max(5000).default(''),discussion:z.string().max(2000).default(''),anchor:anchorSchema}).strict();
+export async function createRemark(db:DB,storage:string,actId:string,input:unknown){
+ const b=remarkSchema.parse(input);const act=await lockAct(db,actId);
+ const task=requireValue((await db.query("SELECT t.*,cy.version_id,cy.closed_at FROM tp.tasks t JOIN tp.cycles cy ON cy.id=t.cycle_id WHERE t.id=$1 AND t.act_id=$2 AND t.status='OPEN' AND tp.task_role(t.role,t.cycle_id)<>'RIRU_ENGINEER' AND tp.task_user(t.assignment_id,t.assignee_id)=tp.uid()",[b.taskId,actId])).rows[0],403,'ACTIVE_REVIEW_REQUIRED');
+ await role(db,task.role,act.res_id);if(task.closed_at||task.version_id!==b.versionId)throw new HttpError(409,'ACTIVE_VERSION_REQUIRED');
+ const uid=(await db.query('SELECT tp.uid() AS id')).rows[0].id;const source=await versionSource(db,storage,actId,b.versionId);
+ if([act.author_id,source.version.created_by].includes(uid))throw new HttpError(403,'SELF_APPROVAL');
+ if((await db.query('SELECT 1 FROM tp.decisions d JOIN tp.tasks t ON t.id=d.task_id WHERE t.act_id=$1 AND d.actor_id=tp.uid() AND t.role<>$2',[actId,task.role])).rowCount)throw new HttpError(403,'MULTIPLE_ROLE_APPROVAL');
+ const category=requireValue((await db.query('SELECT * FROM tp.error_categories WHERE id=$1 AND active',[b.categoryId])).rows[0],422,'CATEGORY_UNAVAILABLE');checkAnchor(await documentModel(source.bytes),b.anchor);
+ const c=(await db.query('INSERT INTO tp.comments(act_id,version_id,task_id,author_id,text,category_id,category_name,anchor,original_value,suggested_value,discussion) VALUES($1,$2,$3,tp.uid(),$4,$5,$6,$7,$8,$9,$10) RETURNING *',[actId,b.versionId,b.taskId,b.text,category.id,category.name,JSON.stringify(b.anchor),b.anchor.quote,b.suggestedValue,b.discussion])).rows[0];await audit(db,actId,'COMMENT_ADDED',{commentId:c.id,versionId:b.versionId,taskId:b.taskId});return c;
+}
+export function compareText(a:string,b:string){if(a.length+b.length>200000)throw new HttpError(422,'COMPARISON_TOO_LARGE');const changes=diffWordsWithSpace(a,b,{timeout:1000,maxEditLength:20000});if(!changes)throw new HttpError(422,'COMPARISON_TOO_COMPLEX');return changes.map(c=>({text:c.value,type:c.added?'added':c.removed?'removed':'same'}));}
+export async function compareVersions(db:DB,storage:string,actId:string,fromId:string,toId:string){
+ const from=await versionSource(db,storage,actId,fromId),to=await versionSource(db,storage,actId,toId);if(from.version.number>=to.version.number)throw new HttpError(422,'VERSION_ORDER_REQUIRED');
+ const a=await documentModel(from.bytes),b=await documentModel(to.bytes);const text=(m:typeof a)=>m.blocks.map(p=>`[${p.part}] ${p.text}`).join('\n');
+ const fields=Array.from(new Set([...Object.keys(from.version.snapshot),...Object.keys(to.version.snapshot)])).filter(k=>JSON.stringify(from.version.snapshot[k])!==JSON.stringify(to.version.snapshot[k])).map(key=>({key,before:from.version.snapshot[key],after:to.version.snapshot[key]}));
+ const remarks=(await db.query("SELECT c.id,c.text,c.version_id,c.category_name,coalesce((SELECT e.type FROM tp.comment_events e WHERE e.comment_id=c.id AND e.version_id=$2 ORDER BY e.created_at DESC,e.id DESC LIMIT 1),'OPEN') AS status FROM tp.comments c JOIN tp.versions v ON v.id=c.version_id WHERE c.act_id=$1 AND v.number<=$3 ORDER BY c.created_at,c.id",[actId,toId,to.version.number])).rows;
+ await audit(db,actId,'DOCUMENT_COMPARED',{fromId,toId});return {from:{id:fromId,number:from.version.number,sha256:a.sha256},to:{id:toId,number:to.version.number,sha256:b.sha256},changes:compareText(text(a),text(b)),fields,remarks,limitations:'Сравнение текста и сохранённых реквизитов. Геометрия таблиц, объединение ячеек, стили, рисунки и вычисляемые поля автоматически не сравниваются. Привязки замечаний на новую версию не переносятся.'};
+}

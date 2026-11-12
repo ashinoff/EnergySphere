@@ -1,0 +1,83 @@
+/* Тема ЭнергоСферы поверх интерфейса TP_Approval (модуль 04 «Акты ТП»).
+   Пишется вручную, импорт scripts/import-tp.mjs её не трогает. Правила — docs/STYLE.md:
+   палитра модуля (лиловый), шрифт Сферы, кнопки 44px, карточки 16px. Смысловые
+   цвета TP (замечания — красный, исправлено — охра, согласовано — зелёный, текущий
+   этап — синий) не меняем. Специфичность «html body …» + !important осознанно:
+   у самого TP много !important, а его CSS мы не правим. */
+:root{
+  --paper:#f5f4f0; --bg:#f5f4f0; --surface:#fff;
+  --line:#e3e2dc; --line-2:#ebeae4;
+  --ink:#1b2028; --ink-2:#5f6873; --muted:#8a929c;
+  --teal:#5e4387; --teal-soft:#efe9f6; --blue:#5e4387;
+  --brand:#5e4387; --brand-hover:#4b356d; --brand-soft:#efe9f6;
+  --menu:#23272e; --menu-active:#2f343c;
+  --font:"Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --r-s:8px; --r-m:12px;
+  --es-accent:#bba9d6; --es-strong:#5e4387;
+}
+html body{background:var(--paper)!important;font-family:var(--font)!important;font-size:15px}
+
+/* Своё меню и шапку TP заменяют меню модуля и заголовок страницы в Сфере. */
+html body .layout{display:block!important;min-height:0!important}
+html body .layout>aside.main-sidebar{display:none!important}
+html body main{padding:0 2px 40px!important;max-width:none!important}
+html body .work-page-header h1{display:none!important}
+html body .work-page-header:not(:has(> :not(h1))){display:none!important}
+html body .demo-banner{display:none!important}
+
+/* Кнопки — как в Сфере: высота 44, скругление 10, основная — заливка цвета модуля. */
+html body .primary-button,
+html body .secondary-button{
+  min-height:44px!important;padding:0 18px!important;border-radius:10px!important;
+  font:600 15px/1 var(--font)!important;letter-spacing:0!important;box-shadow:none!important;transform:none!important;
+}
+html body .primary-button{background:var(--es-accent)!important;color:#1b2028!important;border:0!important}
+html body .primary-button:hover:not(:disabled){background:#a993cb!important}
+html body .primary-button:disabled{background:#e4ddee!important;color:#8a929c!important}
+html body .secondary-button{background:#fff!important;color:#23272e!important;border:1.5px solid #23272e!important}
+html body .secondary-button:hover:not(:disabled){background:#f7f7f4!important;border-color:#23272e!important}
+html body button:not([class]),
+html body .card-actions button,
+html body .card-row-actions button,
+html body .note-actions button{border-radius:10px!important}
+
+/* Поля */
+html body input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),
+html body select,
+html body textarea{
+  border:1.5px solid #c9c8c1!important;border-radius:10px!important;background:#fff!important;font-family:var(--font)!important;
+}
+html body input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),
+html body select{min-height:44px!important}
+html body input:focus,html body select:focus,html body textarea:focus{
+  outline:none!important;border-color:var(--es-strong)!important;box-shadow:0 0 0 3px rgba(94,67,135,.15)!important;
+}
+
+/* Карточки и блоки — как карточки Сферы */
+html body .card,html body .word-heading,html body .word-remarks,html body .word-package,html body .engineer-upload,
+html body .upload-form,html body .tu-preflight,html body .reference-books,html body .service-menu,html body .profile-card,
+html body .profile-section,html body .registry-card,html body .filters,html body .primary-filters{
+  border:1px solid #e3e2dc!important;border-radius:16px!important;
+  box-shadow:0 1px 2px rgba(20,24,31,.05),0 6px 22px rgba(20,24,31,.06)!important;background:#fff!important;
+}
+
+/* Вкладки-переключатели — как вкладки Сферы */
+html body .queue-switch{background:#ebeae4!important;border-radius:12px!important;padding:4px!important;border:0!important;box-shadow:none!important}
+html body .queue-switch button{border-radius:9px!important;border:0!important;box-shadow:none!important;font-weight:600!important}
+html body .queue-switch button[aria-pressed=true],html body .queue-switch button.selected{background:#fff!important;color:#1b2028!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+
+/* Ссылки и мелкие акценты */
+html body a{color:var(--es-strong)}
+html body .text-button{color:var(--es-strong)!important}
+
+/* Строка учётки TP: имя и «Выйти» — в Сфере (меню профиля), оставляем колокольчик уведомлений. */
+html body .work-page-header{background:transparent!important;border:0!important;box-shadow:none!important;padding:0 0 8px!important;margin:0!important;justify-content:flex-end!important}
+html body .work-page-header .profile-chip{display:none!important}
+html body .work-page-header button[aria-label^="Выйти"],html body .work-page-header button[title^="Выйти"]{display:none!important}
+
+/* Шапка формы загрузки — светлая, в цвете модуля, вместо тёмно-синей */
+html body .engineer-upload>.upload-head{background:#efe9f6!important;border-bottom:1px solid #e3e2dc!important}
+html body .upload-head-title{color:#1b2028!important}
+html body .upload-head-title svg{color:#5e4387!important;filter:none!important}
+html body .upload-head-help{color:#5f6873!important}
+html body .upload-head-help svg{color:#9a6a12!important}

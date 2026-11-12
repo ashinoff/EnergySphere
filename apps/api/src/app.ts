@@ -13,6 +13,8 @@ import {
 } from './core/access.js';
 import { mountModules } from './modules/index.js';
 import { requirePermission, route, userOf } from './core/http.js';
+import { DEV_IDENTITY, asDevSuper } from './core/dev.js';
+import { mountTp } from './modules/tp/mount.js';
 
 export { requirePermission, userOf };
 
@@ -22,14 +24,6 @@ export interface AppDeps {
   tokens: TokenClient;
   access: AccessService;
 }
-
-// Только разработка (AUTH_DISABLED): настоящая учётка «dev» в базе — чтобы
-// работало всё, что ссылается на пользователя, — но с правами суперадмина.
-const DEV_IDENTITY = { sub: 'dev-local', username: 'dev', email: null, name: 'Разработчик (вход без Keycloak)', roles: [] };
-const asDevSuper = (user: UserContext): UserContext => ({
-  ...user, isSuper: true, status: 'active', resScope: null,
-  permissions: new Set(Object.keys(PERMISSIONS) as Permission[]),
-});
 
 const credentials = z.object({ username: z.string().trim().min(1).max(200), password: z.string().min(1).max(500) });
 const refreshBody = z.object({ refreshToken: z.string().min(10).max(8000) });
@@ -226,6 +220,9 @@ export function createApp({ db, verify, tokens, access }: AppDeps) {
   }));
 
   mountModules(app, { db });
+  // Модуль 04 «Акты ТП» (TP_Approval) — своё Express-приложение под /tp со своим
+  // API (/tp/api/v1), интерфейсом (/tp/) и входом через мост к пользователям Сферы.
+  mountTp(app, { db, verify, access });
 
   app.use('/api', (_req, _res, next) => next(new HttpError(404, 'Не найдено.')));
 

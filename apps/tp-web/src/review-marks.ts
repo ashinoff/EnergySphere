@@ -1,0 +1,67 @@
+import type {BlockMark} from './DocumentViewer.js';
+type Row=Record<string,any>;
+const shown=(v?:Row)=>v?(v.shown??v.value):'—';
+
+/**
+ * Отметки сверки с ТУ для одного документа: зелёный — реквизит совпадает с ТУ (или подтверждён вручную),
+ * красный — расхождение, жёлтый — не удалось сопоставить, нужна проверка глазами. Справочные пункты (INFO) не красим.
+ * Синий — «одинаково во всём акте»: реквизит, совпавший с ТУ, зелёный в одном месте, остальные его места в акте синие;
+ * переменные шаблона (ТП, фидер, опора, провод…), одинаковые во всех местах акта и на схеме, — тоже синие.
+ */
+export function checkMarks(check:Row|undefined,side:'act'|'tu'):BlockMark[]{
+ if(!check)return [];
+ const confirmed=new Set((check.confirmations??[]).map((c:Row)=>c.field));
+ const marks:BlockMark[]=[];
+ for(const f of check.findings??[] as Row[]){
+  if(f.status==='INFO')continue;
+  const values:Row[]=f[side]??[];
+  const pair=`в акте ${shown(f.act?.[0])}, в ТУ ${shown(f.tu?.[0])}`;
+  const [tone,title]:[BlockMark['tone'],string]=f.norm&&side==='act'?(f.status==='MATCH'?['ok',`✓ ${f.label}: по справочнику (${shown(values[0])}). ${f.norm}`]
+   :confirmed.has(f.field)?['ok',`✓ ${f.label}: подтверждено вручную`]
+   :[f.status==='DIFFERENCE'?'bad':'warn',`${f.status==='DIFFERENCE'?'✗':'?'} ${f.label}: ${f.reason} ${f.norm}`])
+   :f.status==='MATCH'?['ok',`✓ ${f.label}: совпадает с ТУ (${shown(values[0])})`]
+   :confirmed.has(f.field)?['ok',`✓ ${f.label}: подтверждено вручную`]
+   :f.status==='DIFFERENCE'?['bad',`✗ ${f.label}: расхождение — ${pair}`]
+   :['warn',`? ${f.label}: проверьте вручную — ${f.reason??pair}`];
+  const same=String(f.field).startsWith('same.');
+  values.forEach((v:Row,i:number)=>{
+   // Совпадение с ТУ — зелёным одно место акта (первое), остальные места того же значения — синим.
+   const t:BlockMark['tone']=tone==='ok'&&(same||side==='act'&&!f.norm&&f.status==='MATCH'&&i>0)?'same':tone;
+   const title2=t==='same'&&!same?`= ${f.label}: то же значение, что совпало с ТУ (${shown(v)})`:same&&tone==='ok'?`= ${f.label}: ${shown(v)}`:title;
+   if(v.area)marks.push({blockId:'',tone:t,title:title2,area:v.area});
+   else if(v.blockId)marks.push({blockId:v.blockId,tone:t,title:title2,text:v.shown??v.value});
+  });
+ }
+ return marks;
+}
+
+/** Абзацы основного текста, которых нет в другой версии: что изменилось или добавлено. */
+export function changedMarks(model:Row|undefined,other:Row|undefined,otherLabel:string):BlockMark[]{
+ if(!model||!other)return [];
+ const norm=(t:string)=>t.replace(/\s+/g,' ').trim();
+ const texts=new Set((other.blocks as Row[]).filter(b=>(b.part==='word/document.xml'||String(b.part).startsWith('pdf/'))).map(b=>norm(b.text)));
+ return (model.blocks as Row[]).filter(b=>(b.part==='word/document.xml'||String(b.part).startsWith('pdf/'))&&norm(b.text)&&!texts.has(norm(b.text)))
+  .map(b=>({blockId:b.id,tone:'changed' as const,title:`Отличается от ${otherLabel}`}));
+}
+
+/** Цвет статуса реквизита для подсветки «куда смотреть». */
+export function findingTone(check:Row|undefined,f:Row):'ok'|'bad'|'warn'{
+ const confirmed=(check?.confirmations??[]).some((c:Row)=>c.field===f.field);
+ return f.status==='MATCH'||confirmed?'ok':f.status==='DIFFERENCE'?'bad':'warn';
+}
+/** Значение для маркера внутри абзаца: «30 кВт», «ВА-80А» (человеческая форма, иначе сырое значение). */
+const valueText=(v?:Row)=>v?String(v.shown??v.value??''):'';
+
+/**
+ * Пара для клика по отмеченному реквизиту: абзац в другом документе и значения на обеих сторонах.
+ * Самый важный реквизит абзаца — расхождение, затем «проверить», затем совпадение.
+ */
+export function pairedBlock(check:Row|undefined,blockId:string,from:'act'|'tu'){
+ const to=from==='act'?'tu':'act';
+ const rank:Record<string,number>={bad:0,warn:1,ok:2};
+ const found=(check?.findings??[] as Row[]).filter((x:Row)=>x.status!=='INFO'&&(x[from]??[]).some((v:Row)=>v.blockId===blockId)&&x[to]?.[0]?.blockId)
+  .sort((a:Row,b:Row)=>rank[findingTone(check,a)]-rank[findingTone(check,b)]);
+ const f=found[0];if(!f)return undefined;
+ const tone=findingTone(check,f);
+ return {blockId:f[to][0].blockId as string,text:valueText(f[to][0]),tone,own:{text:valueText((f[from] as Row[]).find(v=>v.blockId===blockId)),tone}};
+}

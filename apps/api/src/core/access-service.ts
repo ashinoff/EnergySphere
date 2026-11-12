@@ -37,11 +37,13 @@ export class AccessService {
 
   constructor(private db: Db) {}
 
-  // Матрица ролей заполняется стартовыми правами один раз — при пустой таблице.
+  // Стартовые права роли выдаются один раз: отметка в core.seeded_roles. Роль,
+  // добавленная в каталог позже, получит свои права при следующем запуске, а
+  // права, которые админ потом снял, не вернутся.
   async seedDefaults() {
-    const { rowCount } = await this.db.query('SELECT 1 FROM core.role_permissions LIMIT 1');
-    if (rowCount) return;
     for (const [role, perms] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
+      const fresh = await this.db.query('INSERT INTO core.seeded_roles(role) VALUES ($1) ON CONFLICT DO NOTHING RETURNING role', [role]);
+      if (!fresh.rowCount) continue;
       for (const permission of perms) {
         await this.db.query('INSERT INTO core.role_permissions(role, permission) VALUES ($1, $2) ON CONFLICT DO NOTHING', [role, permission]);
       }
