@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { freshToken } from '../../auth/session.js';
 import { PageHeader } from '../../ui/kit.js';
 import { go } from '../../shell/route.js';
@@ -16,17 +16,42 @@ export const TP_SECTIONS: Record<string, string[]> = {
   approval: ['На согласование'],
   upload: ['Новый документ'],
   books: ['Справочники'],
+  calendar: ['Календарь'],
+  fields: ['Поля карточки'],
+  sync: ['Синхронизация'],
+  service: ['Сервис'],
 };
 export const TP_FRAME_PAGES = new Set(Object.keys(TP_SECTIONS));
 
+// Какие разделы есть у человека в TP (сообщает мост после входа). Пока не
+// известно — null, и меню модуля показывает пункты по правам Сферы.
+let available: string[] | null = null;
+const listeners = new Set<() => void>();
+function setAvailable(labels: string[] | null) {
+  available = labels;
+  listeners.forEach(fn => fn());
+}
+export function useTpAvailable() {
+  return useSyncExternalStore(fn => { listeners.add(fn); return () => listeners.delete(fn); }, () => available);
+}
+export function tpPageAvailable(page: string, labels: string[] | null) {
+  const wanted = TP_SECTIONS[page];
+  if (!wanted || !labels) return true;
+  return labels.some(l => wanted.some(w => l.startsWith(w)));
+}
+
 export function TpHost({ module, page, visible }: { module: ModuleMeta; page: MenuItem; visible: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
+
+  // Новый фрейм (в том числе после смены пользователя) — разделы ещё не известны.
+  useEffect(() => { setAvailable(null); }, []);
 
   useEffect(() => {
     const onMessage = async (e: MessageEvent) => {
       const win = frame.current?.contentWindow;
       if (e.origin !== window.location.origin || e.source !== win || !win) return;
-      const data = e.data as { type?: string; label?: string };
+      const data = e.data as { type?: string; label?: string; labels?: string[] };
+      if (data?.type === 'es-tp-available' && Array.isArray(data.labels)) setAvailable(data.labels);
       if (data?.type === 'app-ready') {
         const token = await freshToken();
         if (token) win.postMessage({ type: 'platform-auth', token }, window.location.origin);

@@ -16,6 +16,17 @@
   --es-accent:#bba9d6; --es-strong:#5e4387;
 }
 html body{background:var(--paper)!important;font-family:var(--font)!important;font-size:15px}
+/* Те же переменные — на body: CSS TP подключается позже и задаёт их на :root,
+   а значения body для содержимого страницы важнее. Тёмные шапки карточек TP
+   (вкладки справочников, сервиса, данных) — графит, как панель администрирования Сферы. */
+html body{
+  --menu:#23272e; --menu-active:#2f343c; --petrol:#23272e; --petrol-2:#2f343c;
+  --brand:#5e4387; --brand-hover:#4b356d; --brand-soft:#efe9f6;
+  --teal:#5e4387; --teal-soft:#efe9f6; --blue:#5e4387;
+  --paper:#f5f4f0; --bg:#f5f4f0; --line:#e3e2dc; --line-2:#ebeae4;
+  --ink:#1b2028; --ink-2:#5f6873; --muted:#8a929c; --font:"Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+}
+html body .review-top,html body .review-tools-head,html body .sheet-toolbar,html body .action-tooltip{background:#23272e!important}
 
 /* Своё меню и шапку TP заменяют меню модуля и заголовок страницы в Сфере. */
 html body .layout{display:block!important;min-height:0!important}

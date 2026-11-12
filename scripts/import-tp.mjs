@@ -63,6 +63,8 @@ export function tsToTp(code, name) {
   const names = namesInSchema();
   let s = code
     .replace(/\bapp\.([a-z_][a-z0-9_]*)\b/g, (whole, id) => (names.has(id) ? `tp.${id}` : whole))
+    // Имя объекта подставляется динамически: `SELECT app.${fn}(…)` (сервис TP).
+    .replace(/\bapp\.\$\{/g, 'tp.${')
     .replace(/search_path=pg_catalog,app\b/g, 'search_path=pg_catalog,tp')
     .replace(/table_schema='app'/g, "table_schema='tp'");
   for (const bad of ['get', 'post', 'use', 'set', 'listen', 'locals', 'y', 'x0', 'x1']) {
@@ -86,13 +88,60 @@ function api() {
   console.log(`API: ${n} файлов → ${to}`);
 }
 
+// ── Палитра ───────────────────────────────────────────────────────────
+// Синий цвет TP зашит в сотни правил — перекрашиваем по оттенку прямо в его CSS/TSX
+// (docs/STYLE.md: цвет модуля 04 — лиловый, серые — тёплые серые Сферы):
+//   • синие и бирюзовые (оттенок 165–255°) → лиловый модуля (≈268°), светлота та же;
+//   • почти серые (холодные рамки и подписи) → тёплые серые Сферы;
+//   • красные, зелёные, охра (смысл: замечание, согласовано, исправлено) — не трогаем.
+const MODULE_HUE = 268;
+function hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+  if (!d) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  const h = max === r ? 60 * (((g - b) / d) % 6) : max === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+  return [(h + 360) % 360, s, l];
+}
+function rgb(h, s, l) {
+  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return [r, g, b].map(v => Math.round((v + m) * 255));
+}
+function recolorRgb(r, g, b) {
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  const [h, s, l] = hsl(r, g, b);
+  if (s < 0.2 || chroma < 12) return rgb(48, Math.min(s, 0.1), l);  // холодный серый → тёплый
+  if (h >= 165 && h <= 255) return rgb(MODULE_HUE, s * 0.8, l);      // синий/бирюзовый → лиловый
+  return [r, g, b];
+}
+const hex2 = n => n.toString(16).padStart(2, '0');
+export function recolor(text) {
+  return text
+    .replace(/#([0-9a-fA-F]{6})\b/g, (whole, h) => {
+      const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+      const [R, G, B] = recolorRgb(r, g, b);
+      return `#${hex2(R)}${hex2(G)}${hex2(B)}`;
+    })
+    .replace(/#([0-9a-fA-F]{3})\b(?![0-9a-fA-F])/g, (whole, h) => {
+      const [r, g, b] = [...h].map(c => parseInt(c + c, 16));
+      const [R, G, B] = recolorRgb(r, g, b);
+      return `#${hex2(R)}${hex2(G)}${hex2(B)}`;
+    })
+    .replace(/rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})(\s*(?:[,/][^)]*)?)\)/g, (whole, r, g, b, rest) => {
+      const [R, G, B] = recolorRgb(+r, +g, +b);
+      return whole.startsWith('rgba') ? `rgba(${R},${G},${B}${rest})` : `rgb(${R} ${G} ${B}${rest})`;
+    });
+}
+
 // ── Интерфейс ─────────────────────────────────────────────────────────
 // Отдельная страница /tp/ (фрейм внутри модуля 04). API — под /tp, вход —
 // токен Сферы через тот же протокол platform-auth, что и у платформы.
 function web() {
   const from = join(src, 'apps', 'web');
   const to = join('apps', 'tp-web');
-  rmSync(join(to, 'src'), { recursive: true, force: true });
+  // Очищаем содержимое (саму папку может держать открытой редактор или оболочка).
+  if (existsSync(join(to, 'src'))) for (const f of readdirSync(join(to, 'src'))) rmSync(join(to, 'src', f), { recursive: true, force: true });
   mkdirSync(to, { recursive: true });
   cpSync(join(from, 'src'), join(to, 'src'), { recursive: true });
   for (const f of readdirSync(join(to, 'src')).filter(f => /\.(tsx?|css)$/.test(f))) {
@@ -101,7 +150,7 @@ function web() {
     if (/\.(tsx?)$/.test(f)) {
       s = s.replace(/(['"`])\/api\/v1\//g, '$1/tp/api/v1/').replace(/(['"`])\/auth\//g, '$1/tp/auth/');
     }
-    writeFileSync(p, s);
+    writeFileSync(p, recolor(s));
   }
   // Родитель — сама Сфера (тот же сайт), а не платформа.
   const appPath = join(to, 'src', 'App.tsx');

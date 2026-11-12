@@ -14,7 +14,7 @@ const d=(v?:string|null)=>v?new Date(v+(v.length===10?'T00:00:00Z':'')).toLocale
  * история циклов с возвратами и все замечания с отметкой об устранении. Данные — только из фактических записей.
  */
 /** Служебный значок в углу листа (как на экземпляре к печати): затрудняет подмену листа. */
-const Corner=({at}:{at:string})=><span className={`sheet-corner sheet-corner-${at}`} aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>;
+const Corner=({at}:{at:string})=><span className={`sheet-corner sheet-corner-${at}`} aria-hidden="true"><svg viewBox="0 0 24 24" fill="#ffffff"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>;
 
 /** inline — лист внутри раздела «Печать» (без отдельного окна); печатается только сам лист. */
 export default function ApprovalSheet({detail,api,profile,onClose,inline=false}:{detail:Row;api:(p:string)=>Promise<any>;profile:Row;onClose?:()=>void;inline?:boolean}){

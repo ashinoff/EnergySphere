@@ -4,7 +4,7 @@ import { useAuth, useMe } from '../auth/AuthContext.js';
 import { ADMIN_MENU, MODULES, moduleById, type MenuItem, type ModuleMeta } from '../modules/registry.js';
 import { ModulePage } from '../modules/ModulePage.js';
 import { AnalysisHost } from '../modules/analysis/AnalysisHost.js';
-import { TP_FRAME_PAGES, TpHost } from '../modules/tp/TpHost.js';
+import { TP_FRAME_PAGES, TpHost, tpPageAvailable, useTpAvailable } from '../modules/tp/TpHost.js';
 
 // Страницы, которые показывает фрейм модуля (остальные — обычные страницы Сферы).
 const isFramePage = (module: string, page: string) => module === 'analysis' || (module === 'tp' && TP_FRAME_PAGES.has(page));
@@ -102,7 +102,10 @@ export function Shell() {
     go({ view: 'module', id: m.id, page: lastPages.current[m.id] ?? m.menu[0].id });
   };
 
-  const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i => !i.perm || i.perm === view || can(i.perm));
+  // Пункты «Актов ТП» — ещё и по разделам, которые есть у человека в самом TP.
+  const tpAvailable = useTpAvailable();
+  const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i =>
+    (!i.perm || i.perm === view || can(i.perm)) && (view !== 'tp.view' || tpPageAvailable(i.id, tpAvailable)));
 
   // Модули-фреймы (анализатор, акты ТП) создаются при первом открытии и дальше
   // не пересоздаются: загруженный файл и состояние переживают переходы по разделам.

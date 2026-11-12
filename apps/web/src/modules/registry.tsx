@@ -3,7 +3,7 @@ import type { ModuleId, Permission } from '../../../api/src/core/access.js';
 import {
   IconBars, IconCheckCircle, IconCpu, IconPie, IconScale, IconSliders, IconBook, IconCalendar, IconCamera, IconClock, IconDocCheck, IconFolder,
   IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget,
-  IconUpload, IconUser, IconUsers, IconWrench,
+  IconSettings, IconUpload, IconUser, IconUsers, IconWrench,
 } from '../ui/icons.js';
 
 export interface MenuItem {
@@ -77,6 +77,11 @@ export const MODULES: ModuleMeta[] = [
       { id: 'upload', title: 'Загрузка на проверку', icon: <IconUpload />, perm: 'tp.create', about: 'ТУ и акт ТП (АВТУ, уведомление) в PDF — сверка с ТУ и проверки акта до отправки.' },
       { id: 'create', title: 'Создание акта по ТУ', icon: <IconPlus />, perm: 'tp.create', about: 'Черновик акта ТП по данным технических условий — в разработке.' },
       { id: 'books', title: 'Справочники', icon: <IconBook />, about: 'Номиналы ВА и ТТ, сечения ВЛ и КЛ, tg φ, доверенности.' },
+      // Служебные разделы TP — видны только тем, у кого они есть в TP (админ процесса / техадмин).
+      { id: 'calendar', title: 'Календарь', icon: <IconCalendar />, about: 'Производственный календарь: сроки этапов согласования в рабочих днях.' },
+      { id: 'fields', title: 'Поля карточки', icon: <IconList />, about: 'Какие поля заполняются в карточке документа.' },
+      { id: 'sync', title: 'Синхронизация', icon: <IconNetwork />, about: 'Передача согласованных договоров в «Учёт ПУ».' },
+      { id: 'service', title: 'Сервис', icon: <IconSettings />, about: 'Состояние, проверки целостности, резервные копии, удаление насовсем.' },
     ],
   },
 ];

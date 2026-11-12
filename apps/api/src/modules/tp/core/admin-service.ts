@@ -28,7 +28,7 @@ export async function adminDocuments(db:DB,search:string){
 /** Удаление в базе (одна транзакция); файлы с диска удаляет вызывающий после фиксации — removeFiles. */
 export async function purge(db:DB,kind:'document'|'tu'|'version',id:string){
  const fn={document:'admin_purge_act',tu:'admin_purge_tu',version:'admin_purge_version'}[kind];
- try{return (await db.query(`SELECT app.${fn}($1) AS result`,[id])).rows[0].result as {files:string[]};}
+ try{return (await db.query(`SELECT tp.${fn}($1) AS result`,[id])).rows[0].result as {files:string[]};}
  catch(e){
   const code=(e as {code?:string}).code;
   if(code==='P0002')throw new HttpError(404,'NOT_FOUND','Не найдено — возможно, уже удалено.');

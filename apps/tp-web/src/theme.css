@@ -1,12 +1,12 @@
 /*
  * Цветовая тема (палитра владельца, 05.11.2026): спокойная деловая.
- * Меню #142238 · активный пункт #253B59 · фон #F3F5F9 · карточки #FFFFFF · главная кнопка #3156A3 (наведение #274684)
- * · основной текст #202C3D · границы #DFE5ED. Красный и зелёный сохраняют смысл: ошибка/расхождение и согласовано/совпадает.
+ * Меню #251834 · активный пункт #3e2a54 · фон #f7f7f5 · карточки #ffffff · главная кнопка #673c98 (наведение #53307b)
+ * · основной текст #2e233a · границы #e6e0ec. Красный и зелёный сохраняют смысл: ошибка/расхождение и согласовано/совпадает.
  * Подключается последним и перекрывает прежние цвета.
  */
 :root{
-  --menu:#142238;--menu-active:#253B59;--brand:#3156A3;--brand-hover:#274684;--brand-soft:#eaf0fa;
-  --ink:#202C3D;--ink-2:#4a5870;--muted:#6b778a;--paper:#F3F5F9;--bg:var(--paper);--surface:#FFFFFF;--line:#DFE5ED;--line-2:#ebeff5;
+  --menu:#251834;--menu-active:#3e2a54;--brand:#673c98;--brand-hover:#53307b;--brand-soft:#f2ecf8;
+  --ink:#2e233a;--ink-2:#5c4e6c;--muted:#87826e;--paper:#f7f7f5;--bg:var(--paper);--surface:#ffffff;--line:#e6e0ec;--line-2:#f2f1ef;
   --teal:var(--brand);--teal-soft:var(--brand-soft);--blue:var(--brand);--petrol:var(--menu);--petrol-2:var(--menu-active);
   --current:var(--brand);--current-soft:var(--brand-soft);
   --red:#c62828;--red-soft:#fdecea;--green:#2e7d32;--green-soft:#e7f4e8;
@@ -16,58 +16,58 @@ body{background:var(--paper);color:var(--ink)}
 .card{border-color:var(--line)}
 
 /* Левое меню. */
-aside.main-sidebar,.practical-layout .main-sidebar{background:var(--menu)!important;color:#fff}
-.main-sidebar nav button{border-radius:10px!important;border:0!important;color:#c9d2e0!important;background:transparent!important;box-shadow:none!important}
-.main-sidebar nav button:hover{background:#ffffff0f!important;color:#fff!important}
-.main-sidebar nav button.selected{background:var(--menu-active)!important;color:#fff!important}
-.main-sidebar nav button b{background:#ffffff1a!important;color:#fff!important;border-radius:999px!important;font-weight:700}
+aside.main-sidebar,.practical-layout .main-sidebar{background:var(--menu)!important;color:#ffffff}
+.main-sidebar nav button{border-radius:10px!important;border:0!important;color:#d4cbde!important;background:transparent!important;box-shadow:none!important}
+.main-sidebar nav button:hover{background:#ffffff0f!important;color:#ffffff!important}
+.main-sidebar nav button.selected{background:var(--menu-active)!important;color:#ffffff!important}
+.main-sidebar nav button b{background:#ffffff1a!important;color:#ffffff!important;border-radius:999px!important;font-weight:700}
 .main-sidebar nav button.selected b{background:#ffffff2e!important}
-.platform-badge{color:#8e9bb1!important}
+.platform-badge{color:#a9a596!important}
 
 /* Кнопки: главная — синяя, второстепенная — контурная, опасное действие — красное. Все со скруглением-таблеткой. */
-.primary-button{background:var(--brand)!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 6px #3156a333!important;font-weight:600}
+.primary-button{background:var(--brand)!important;color:#ffffff!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 6px #3156a333!important;font-weight:600}
 .primary-button:hover:not(:disabled){background:var(--brand-hover)!important}
-.primary-button:disabled{background:#a9b6cf!important;box-shadow:none!important}
-.secondary-button{background:#fff!important;color:var(--brand)!important;border:1px solid var(--line)!important;border-radius:999px!important}
-.secondary-button:hover:not(:disabled){background:var(--brand-soft)!important;border-color:#c3d0ea!important}
-.danger-button{background:#fff!important;color:var(--red)!important;border:1px solid #f0bcbc!important;border-radius:999px!important}
+.primary-button:disabled{background:#bbadcb!important;box-shadow:none!important}
+.secondary-button{background:#ffffff!important;color:var(--brand)!important;border:1px solid var(--line)!important;border-radius:999px!important}
+.secondary-button:hover:not(:disabled){background:var(--brand-soft)!important;border-color:#d5c7e6!important}
+.danger-button{background:#ffffff!important;color:var(--red)!important;border:1px solid #f0bcbc!important;border-radius:999px!important}
 .danger-button:hover:not(:disabled){background:var(--red-soft)!important}
 .text-button,.extra-filters summary,.compare-extra summary{color:var(--brand)}
 button:not([class]),.review-verify button,.note-actions button,.card-actions button,.card-row-actions button,.package-use{border-radius:999px!important}
 .icon-button:hover{background:var(--brand-soft);color:var(--brand)}
 
 /* Сегментированные переключатели: одна рамка-таблетка, активный пункт — заливка цветом активного пункта меню. */
-.queue-switch,.doc-type-switch,.review-subtabs,.note-filter,.review-tabs,.act-panels{display:inline-flex!important;flex-wrap:wrap;gap:2px!important;padding:3px;border:1px solid var(--line);border-radius:999px;background:#fff;width:auto;max-width:100%}
+.queue-switch,.doc-type-switch,.review-subtabs,.note-filter,.review-tabs,.act-panels{display:inline-flex!important;flex-wrap:wrap;gap:2px!important;padding:3px;border:1px solid var(--line);border-radius:999px;background:#ffffff;width:auto;max-width:100%}
 .queue-switch button,.doc-type-switch button,.review-subtabs button,.note-filter button,.review-tabs button,.act-panels button{border:0!important;border-radius:999px!important;background:transparent!important;color:var(--ink-2)!important;box-shadow:none!important;padding:7px 14px!important;font-weight:600;font-size:13px;cursor:pointer}
 .queue-switch button:hover,.doc-type-switch button:hover,.review-subtabs button:hover,.note-filter button:hover,.review-tabs button:hover,.act-panels button:hover{background:var(--paper)!important;color:var(--ink)!important}
-.queue-switch button[aria-pressed=true],.doc-type-switch button[aria-pressed=true],.review-subtabs button[aria-pressed=true],.note-filter button[aria-pressed=true],.review-tabs button[aria-selected=true],.act-panels button[aria-pressed=true]{background:var(--menu-active)!important;color:#fff!important}
+.queue-switch button[aria-pressed=true],.doc-type-switch button[aria-pressed=true],.review-subtabs button[aria-pressed=true],.note-filter button[aria-pressed=true],.review-tabs button[aria-selected=true],.act-panels button[aria-pressed=true]{background:var(--menu-active)!important;color:#ffffff!important}
 .card-tools.act-panels{margin-left:auto}
 
 /* Вкладки «Все документы»: число — бейдж; у «Не согласованных» и «Согласованных» — красный и зелёный. */
 .document-tabs button{display:inline-flex;align-items:center;gap:8px}
 .document-tabs .tab-count{min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--paper);color:var(--ink-2)}
-.document-tabs .tab-count.is-zero{color:#a3adbd}
+.document-tabs .tab-count.is-zero{color:#b8b5a8}
 .document-tabs [data-tab=corrections] .tab-count:not(.is-zero){background:var(--red-soft);color:var(--red)}
 .document-tabs [data-tab=approved] .tab-count:not(.is-zero){background:var(--green-soft);color:var(--green)}
-.queue-switch.document-tabs button[aria-pressed=true] .tab-count{background:#ffffff26;color:#fff}
+.queue-switch.document-tabs button[aria-pressed=true] .tab-count{background:#ffffff26;color:#ffffff}
 .review-tabs b,.review-subtabs b{background:var(--paper)!important;color:inherit;border-radius:999px}
-.review-tabs button[aria-selected=true] b,.review-subtabs button[aria-pressed=true] b{background:#ffffff26!important;color:#fff!important}
+.review-tabs button[aria-selected=true] b,.review-subtabs button[aria-pressed=true] b{background:#ffffff26!important;color:#ffffff!important}
 
 /* Уведомления: колокольчик и число красные, когда есть непрочитанные. */
 .bell-button{position:relative}
 .bell-button.has-unread{color:var(--red)!important}
 .bell-button.has-unread svg{animation:bell-ring 2.4s ease-in-out 1}
 .bell-button b{color:inherit}
-.bell-button.has-unread b{position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;line-height:18px;text-align:center;box-shadow:0 0 0 2px #fff}
+.bell-button.has-unread b{position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#ffffff;font-size:11px;line-height:18px;text-align:center;box-shadow:0 0 0 2px #ffffff}
 @keyframes bell-ring{0%,100%{transform:rotate(0)}10%,30%{transform:rotate(14deg)}20%,40%{transform:rotate(-12deg)}50%{transform:rotate(0)}}
 
 /* Шапка: ФИО с должностью и РЭС — вход в профиль. */
 .profile-chip{display:flex;flex-direction:column;align-items:flex-end;gap:1px;border:1px solid transparent;background:transparent;border-radius:12px;padding:4px 10px;cursor:pointer;text-align:right;max-width:340px}
-.profile-chip:hover,.profile-chip.selected{background:#fff;border-color:var(--line)}
+.profile-chip:hover,.profile-chip.selected{background:#ffffff;border-color:var(--line)}
 .profile-chip b{font-size:13px;color:var(--ink)}.profile-chip small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
 .profile-page{display:grid;gap:14px;max-width:900px}
 .profile-card{display:flex;gap:18px;align-items:flex-start;padding:20px}
-.profile-avatar{flex:none;width:64px;height:64px;border-radius:50%;background:var(--menu-active);color:#fff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.profile-avatar{flex:none;width:64px;height:64px;border-radius:50%;background:var(--menu-active);color:#ffffff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .profile-main{flex:1;min-width:0}.profile-main h2{margin:0 0 4px}.profile-sub{margin:0 0 10px;color:var(--ink-2)}.profile-sub .muted{color:var(--muted);font-size:13px}
 .profile-facts{display:grid;gap:8px;margin:0}.profile-facts div{display:grid;grid-template-columns:80px 1fr;gap:10px}.profile-facts dt{color:var(--muted);font-size:13px}.profile-facts dd{margin:0;display:flex;flex-wrap:wrap;gap:6px}
 .profile-role{background:var(--brand-soft);color:var(--brand);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
@@ -76,7 +76,7 @@ button:not([class]),.review-verify button,.note-actions button,.card-actions but
 @media(max-width:600px){.profile-card{flex-direction:column}.profile-chip{align-items:flex-start;text-align:left}}
 
 /* Панель над документом: версия, статус и действия — одна таблетка. */
-.word-heading{display:flex;align-items:center;flex-wrap:wrap;gap:6px!important;padding:5px 6px 5px 14px!important;margin:6px 0 10px;background:#fff;border:1px solid var(--line);border-radius:999px}
+.word-heading{display:flex;align-items:center;flex-wrap:wrap;gap:6px!important;padding:5px 6px 5px 14px!important;margin:6px 0 10px;background:#ffffff;border:1px solid var(--line);border-radius:999px}
 .word-heading .word-version{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:0}
 .word-heading .word-version select{border:0;background:var(--paper);border-radius:999px;padding:6px 12px;font-weight:600;color:var(--ink)}
 .word-heading .word-meta{font-size:12px;color:var(--muted);padding:0 8px;border-left:1px solid var(--line)}
@@ -86,14 +86,14 @@ button:not([class]),.review-verify button,.note-actions button,.card-actions but
 @media(max-width:760px){.word-heading{border-radius:14px}}
 
 /* Пакет документов: строка — документ в окне просмотра. */
-.package-list .package-item{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0!important;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:6px;overflow:hidden}
+.package-list .package-item{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0!important;border:1px solid var(--line);border-radius:12px;background:#ffffff;margin-bottom:6px;overflow:hidden}
 .package-list .package-item.is-open{border-color:var(--brand);background:var(--brand-soft)}
 .package-list .package-open{flex:1;min-width:0;display:flex!important;align-items:flex-start;gap:8px;text-align:left;border:0!important;background:transparent!important;padding:10px!important;cursor:pointer;color:inherit;box-shadow:none!important}
 .package-list .package-open:hover{background:var(--paper)!important}
 .package-list .package-open span{display:grid;gap:2px;min-width:0}.package-list .package-open b{color:var(--ink)}.package-list .package-open small{color:var(--muted)}
 .package-list .package-open svg{margin-top:2px;color:var(--brand)}
 .package-download{margin-right:6px}
-.package-use{margin:0 10px 10px 34px;font-size:12px;border:1px solid var(--line);background:#fff;color:var(--brand);padding:5px 10px}
+.package-use{margin:0 10px 10px 34px;font-size:12px;border:1px solid var(--line);background:#ffffff;color:var(--brand);padding:5px 10px}
 .package-print{color:var(--green)!important;font-weight:700}
 /* Загрузка новой версии — такая же кнопка «Выбрать файл DOCX», как в форме загрузки. */
 .upload-pill{display:grid!important;gap:8px;padding:12px!important;border-radius:12px;background:var(--paper);border:1px solid var(--line);width:100%;box-sizing:border-box}
@@ -111,48 +111,48 @@ button:not([class]),.review-verify button,.note-actions button,.card-actions but
 .review-num,.review-edge{background:var(--brand)!important}
 .review-side-head{border-bottom:0!important;padding:10px!important}
 .review-nav{border-radius:999px!important;border:1px solid #f3c9c0!important;background:var(--red-soft)!important;color:#9b2c22!important}
-.review-nav button{border:0!important;border-radius:999px!important;background:#fff!important;color:#9b2c22!important}
-.tu-preflight .section-heading button{border:0!important;border-radius:999px!important;padding:8px 16px!important;background:var(--brand)!important;color:#fff!important;font-weight:600}
+.review-nav button{border:0!important;border-radius:999px!important;background:#ffffff!important;color:#9b2c22!important}
+.tu-preflight .section-heading button{border:0!important;border-radius:999px!important;padding:8px 16px!important;background:var(--brand)!important;color:#ffffff!important;font-weight:600}
 .tu-preflight .section-heading button:hover:not(:disabled){background:var(--brand-hover)!important}
-.zoom-control{border-radius:999px;border:1px solid var(--line);background:#fff}.zoom-control button{border-radius:999px;color:var(--ink-2)}.zoom-control button:hover:not(:disabled){background:var(--paper)}
+.zoom-control{border-radius:999px;border:1px solid var(--line);background:#ffffff}.zoom-control button{border-radius:999px;color:var(--ink-2)}.zoom-control button:hover:not(:disabled){background:var(--paper)}
 .zoom-control .zoom-fit{border-left:1px solid var(--line);border-radius:0 999px 999px 0}
 .float-remark{background:var(--brand)!important}.float-remark:hover{background:var(--brand-hover)!important}
-.float-remark.float-blocked{background:#8a95a8!important}
+.float-remark.float-blocked{background:#a39f8f!important}
 /* Подсказка у выделения — не кнопка: белая плашка с тёмным текстом (раньше синий фон темы перекрывал её, текст терялся). */
-.float-remark.float-hint{background:#fff!important;color:var(--ink)!important;border:1px solid #e9c46a!important;box-shadow:0 4px 12px #0002}
+.float-remark.float-hint{background:#ffffff!important;color:var(--ink)!important;border:1px solid #e9c46a!important;box-shadow:0 4px 12px #0002}
 .upload-pill{border-style:solid!important;border-width:1px!important}
 
 /* ===== 06.11.2026: фирменный знак, контуры, вкладки документов (решение владельца) ===== */
 .brand{display:flex!important;align-items:center;gap:10px}
 .brand .rosseti-mark{width:38px;height:38px;border-radius:12px}
 /* Таблетки, объединяющие кнопки, — синий контур; формы и карточки — тонкая серая рамка. */
-.queue-switch,.doc-type-switch,.review-subtabs,.note-filter,.review-tabs,.act-panels{border:1.5px solid var(--brand)!important;box-shadow:0 1px 3px rgb(49 86 163 / .12)}
-.card,.word-heading,.word-remarks,.word-package,.engineer-upload,.upload-form,.tu-preflight,.reference-books,.service-menu,.profile-card,.profile-section,.registry-card,.filters,.primary-filters{border:1px solid #cfd6e0!important}
+.queue-switch,.doc-type-switch,.review-subtabs,.note-filter,.review-tabs,.act-panels{border:1.5px solid var(--brand)!important;box-shadow:0 1px 3px rgb(103 60 152 / .12)}
+.card,.word-heading,.word-remarks,.word-package,.engineer-upload,.upload-form,.tu-preflight,.reference-books,.service-menu,.profile-card,.profile-section,.registry-card,.filters,.primary-filters{border:1px solid #d7d1de!important}
 /* «Все документы»: вкладки крупнее основного меню, ненулевые цифры подсвечены. */
 .queue-switch.document-tabs button{padding:10px 18px!important;font-size:15px!important;font-weight:600!important;gap:8px}
 .document-tabs .tab-count{min-width:26px;height:24px;font-size:13px}
-.document-tabs .tab-count:not(.is-zero){background:var(--brand);color:#fff;box-shadow:0 0 0 3px rgb(49 86 163 / .15)}
-.document-tabs .tab-count.is-zero{background:transparent;color:#b3bccb;border:1px solid #dfe5ed}
-.document-tabs [data-tab=corrections] .tab-count:not(.is-zero){background:var(--red);color:#fff;box-shadow:0 0 0 3px rgb(217 58 47 / .15)}
-.document-tabs [data-tab=approved] .tab-count:not(.is-zero){background:var(--green);color:#fff;box-shadow:0 0 0 3px rgb(46 157 91 / .15)}
-.queue-switch.document-tabs button[aria-pressed=true] .tab-count:not(.is-zero){background:#fff;color:var(--menu-active);box-shadow:none}
+.document-tabs .tab-count:not(.is-zero){background:var(--brand);color:#ffffff;box-shadow:0 0 0 3px rgb(103 60 152 / .15)}
+.document-tabs .tab-count.is-zero{background:transparent;color:#c5c3b9;border:1px solid #e6e0ec}
+.document-tabs [data-tab=corrections] .tab-count:not(.is-zero){background:var(--red);color:#ffffff;box-shadow:0 0 0 3px rgb(217 58 47 / .15)}
+.document-tabs [data-tab=approved] .tab-count:not(.is-zero){background:var(--green);color:#ffffff;box-shadow:0 0 0 3px rgb(46 157 91 / .15)}
+.queue-switch.document-tabs button[aria-pressed=true] .tab-count:not(.is-zero){background:#ffffff;color:var(--menu-active);box-shadow:none}
 
 /* ===== Форма загрузки (06.11.2026): крупные режимы, выделенные названия документов, необязательные документы ===== */
 .engineer-upload .upload-modes{display:flex!important;width:100%;padding:4px}
 .engineer-upload .upload-modes button{flex:1;padding:13px 22px!important;font-size:16px!important;font-weight:700!important}
 .engineer-upload .extra-kinds button{padding:9px 16px!important;font-size:14px!important}
 .file-tile-title{font-size:16px!important;font-weight:800!important;color:var(--brand)!important;letter-spacing:.2px}
-.file-tile-title small{margin-left:8px;font-size:11px;font-weight:600;color:var(--muted,#7b8794);letter-spacing:0}
+.file-tile-title small{margin-left:8px;font-size:11px;font-weight:600;color:var(--muted,#938f7c);letter-spacing:0}
 .file-tile .act-kind{align-self:flex-start;padding:2px!important}
 .file-tile .act-kind button{padding:5px 14px!important;font-size:13px!important;font-weight:700!important}
 .upload-optional{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
-.upload-optional .file-tile{background:#fafbfd}
+.upload-optional .file-tile{background:#fcfcfb}
 .upload-optional .file-tile-title{font-size:14px!important}
 @media(max-width:900px){.upload-optional{grid-template-columns:minmax(0,1fr)}.engineer-upload .upload-modes button{font-size:14px!important;padding:11px 12px!important}}
 
 /* ===== Плавный бегунок в таблетках (06.11.2026): подсветка — отдельный слой, перетекает к выбранной кнопке ===== */
 :is(.queue-switch,.doc-type-switch,.act-panels,.review-subtabs,.note-filter,.review-tabs){position:relative;isolation:isolate}
-.pill-thumb{position:absolute;left:0;top:0;z-index:0;border-radius:999px;background:var(--menu-active);box-shadow:0 2px 8px rgb(20 34 56 / .25);opacity:0;pointer-events:none;
+.pill-thumb{position:absolute;left:0;top:0;z-index:0;border-radius:999px;background:var(--menu-active);box-shadow:0 2px 8px rgb(37 24 52 / .25);opacity:0;pointer-events:none;
  transition:transform .45s cubic-bezier(.65,0,.25,1),width .45s cubic-bezier(.65,0,.25,1),height .45s,opacity .2s}
 .pill-thumb.is-visible{opacity:1}
 :is(.queue-switch,.doc-type-switch,.act-panels,.review-subtabs,.note-filter,.review-tabs)>:not(.pill-thumb){position:relative;z-index:1;transition:color .3s ease .05s}

@@ -38,8 +38,18 @@
     if (Array.isArray(e.data.labels)) go(e.data.labels);
   });
 
+  // Какие разделы есть у этого человека (у инженера, согласующего и админа — разные):
+  // по ним меню модуля в Сфере показывает только существующие пункты.
+  var lastList = '';
+  function reportAvailable() {
+    var labels = buttons().map(label).filter(Boolean);
+    var key = labels.join('|');
+    if (key && key !== lastList) { lastList = key; send({ type: 'es-tp-available', labels: labels }); }
+  }
+
   var last = '';
   function report() {
+    reportAvailable();
     // Пока выполняется переход по меню Сферы, промежуточные разделы (например,
     // раздел по умолчанию сразу после входа) не сообщаем — иначе меню «дёрнется».
     if (pending) return;
