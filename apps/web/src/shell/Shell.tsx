@@ -5,9 +5,13 @@ import { ADMIN_MENU, MODULES, moduleById, type MenuItem, type ModuleMeta } from 
 import { ModulePage } from '../modules/ModulePage.js';
 import { AnalysisHost } from '../modules/analysis/AnalysisHost.js';
 import { TP_FRAME_PAGES, TpHost, tpPageAvailable, useTpAvailable } from '../modules/tp/TpHost.js';
+import { TP_ROLE_INFO } from '../modules/tp/TpRoleInfo.js';
 
 // Страницы, которые показывает фрейм модуля (остальные — обычные страницы Сферы).
-const isFramePage = (module: string, page: string) => module === 'analysis' || (module === 'tp' && TP_FRAME_PAGES.has(page));
+// Раздел TP, которого нет у человека (по сообщению моста), показывается страницей
+// Сферы с объяснением (TpRoleInfo), а не фреймом.
+const isFramePage = (module: string, page: string, tpLabels: string[] | null = null) =>
+  module === 'analysis' || (module === 'tp' && TP_FRAME_PAGES.has(page) && tpPageAvailable(page, tpLabels));
 import { AdminPage } from '../admin/AdminPage.js';
 import { IconArrowLeft, IconArrowRight, IconLock, IconSettings } from '../ui/icons.js';
 import { useToast } from '../ui/kit.js';
@@ -105,11 +109,11 @@ export function Shell() {
   // Пункты «Актов ТП» — ещё и по разделам, которые есть у человека в самом TP.
   const tpAvailable = useTpAvailable();
   const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i =>
-    (!i.perm || i.perm === view || can(i.perm)) && (view !== 'tp.view' || tpPageAvailable(i.id, tpAvailable)));
+    (!i.perm || i.perm === view || can(i.perm)) && (view !== 'tp.view' || tpPageAvailable(i.id, tpAvailable) || i.id in TP_ROLE_INFO));
 
   // Модули-фреймы (анализатор, акты ТП) создаются при первом открытии и дальше
   // не пересоздаются: загруженный файл и состояние переживают переходы по разделам.
-  const framePage = effective.view === 'module' && isFramePage(effective.id, effective.page) ? effective : null;
+  const framePage = effective.view === 'module' && isFramePage(effective.id, effective.page, tpAvailable) ? effective : null;
   const [framesSeen, setFramesSeen] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (framePage && !framesSeen[framePage.id]) setFramesSeen(seen => ({ ...seen, [framePage.id]: true }));
@@ -121,7 +125,7 @@ export function Shell() {
   const frameItem = (id: ModuleId) => {
     const m = moduleById(id)!;
     const pageId = lastFramePages.current[id];
-    return m.menu.find(i => i.id === pageId && isFramePage(id, i.id)) ?? m.menu.find(i => isFramePage(id, i.id))!;
+    return m.menu.find(i => i.id === pageId && isFramePage(id, i.id, tpAvailable)) ?? m.menu.find(i => isFramePage(id, i.id, tpAvailable)) ?? m.menu[0];
   };
 
   return (

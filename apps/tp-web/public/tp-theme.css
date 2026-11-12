@@ -92,3 +92,7 @@ html body .upload-head-title{color:#1b2028!important}
 html body .upload-head-title svg{color:#5e4387!important;filter:none!important}
 html body .upload-head-help{color:#5f6873!important}
 html body .upload-head-help svg{color:#9a6a12!important}
+
+/* Свою форму входа TP не показывает: вход — токеном Сферы (оболочка держит фрейм
+   скрытым, пока TP не вошёл; это — страховка от мигания). */
+html body .login-screen,html body .login-card{display:none!important}

@@ -30,6 +30,8 @@
         return;
       }
     }
+    // Панель уже есть, а такого раздела у человека нет — не ждём (Сфера покажет объяснение).
+    if (list.length) { pending = null; reportAvailable(); return; }
     if (Date.now() < pending.until) setTimeout(attempt, 300); else pending = null;
   }
 

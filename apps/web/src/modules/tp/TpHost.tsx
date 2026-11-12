@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { freshToken } from '../../auth/session.js';
 import { PageHeader } from '../../ui/kit.js';
 import { go } from '../../shell/route.js';
@@ -42,16 +42,23 @@ export function tpPageAvailable(page: string, labels: string[] | null) {
 
 export function TpHost({ module, page, visible }: { module: ModuleMeta; page: MenuItem; visible: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  // Пока TP входит по токену Сферы, он показал бы свою форму входа — прячем фрейм
+  // до сообщения о разделах (или 10 с, если что-то пошло не так — тогда видна ошибка TP).
+  const [ready, setReady] = useState(false);
 
   // Новый фрейм (в том числе после смены пользователя) — разделы ещё не известны.
-  useEffect(() => { setAvailable(null); }, []);
+  useEffect(() => {
+    setAvailable(null);
+    const timer = setTimeout(() => setReady(true), 10_000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const onMessage = async (e: MessageEvent) => {
       const win = frame.current?.contentWindow;
       if (e.origin !== window.location.origin || e.source !== win || !win) return;
       const data = e.data as { type?: string; label?: string; labels?: string[] };
-      if (data?.type === 'es-tp-available' && Array.isArray(data.labels)) setAvailable(data.labels);
+      if (data?.type === 'es-tp-available' && Array.isArray(data.labels)) { setAvailable(data.labels); setReady(true); }
       if (data?.type === 'app-ready') {
         const token = await freshToken();
         if (token) win.postMessage({ type: 'platform-auth', token }, window.location.origin);
@@ -73,7 +80,8 @@ export function TpHost({ module, page, visible }: { module: ModuleMeta; page: Me
   return (
     <div className="analysis" hidden={!visible}>
       <PageHeader crumbs={['ЭнергоСфера', module.title]} title={page.title} subtitle={page.about} />
-      <iframe ref={frame} className="analysis__frame" src="/tp/" title="Акты ТП"
+      {!ready && <p className="muted frame-loading">Загрузка…</p>}
+      <iframe ref={frame} className={`analysis__frame ${ready ? '' : 'is-loading'}`} src="/tp/" title="Акты ТП"
         onLoad={() => {
           const labels = TP_SECTIONS[page.id];
           if (labels) frame.current?.contentWindow?.postMessage({ type: 'es-tp-go', labels }, window.location.origin);

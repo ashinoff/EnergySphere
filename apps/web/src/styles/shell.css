@@ -140,6 +140,9 @@
 .analysis[hidden] { display: none; }
 .analysis .page-head { margin-bottom: 14px; }
 .analysis__frame { flex: 1; min-height: 0; width: 100%; border: 0; background: var(--bg); }
+/* Фрейм ещё входит — держим место, но не показываем его промежуточные экраны. */
+.analysis__frame.is-loading { visibility: hidden; }
+.frame-loading { position: absolute; margin-top: 140px; }
 @keyframes content-in { from { opacity: 0; transform: translateY(14px); } }
 
 /* ── Экран загрузки ──────────────────────────────────────────────────── */
