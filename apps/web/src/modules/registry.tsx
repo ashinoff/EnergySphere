@@ -71,10 +71,12 @@ export const MODULES: ModuleMeta[] = [
     id: 'tp', num: '04', title: 'Акты ТП', subtitle: 'Подготовка\nи согласование',
     icon: <IconDocCheck />, image: '/img/tp.png', tint: '#c4b9d7', accent: '#bba9d6', strong: '#5e4387', view: 'tp.view',
     menu: [
-      { id: 'registry', title: 'Реестр актов', icon: <IconList />, about: 'Все акты ТП с фильтрами по статусу и РЭС.' },
-      { id: 'new', title: 'Новый акт', icon: <IconPlus />, perm: 'tp.create', about: 'Подготовка акта по ТУ и уведомлению.' },
-      { id: 'approval', title: 'На согласовании', icon: <IconClock />, perm: 'tp.approve', about: 'Акты, ожидающие вашего решения.' },
-      { id: 'books', title: 'Справочники', icon: <IconBook />, about: 'Справочники и шаблоны документов.' },
+      // Перенос TP_Approval (проверка и согласование актов) + новое: создание акта по ТУ.
+      { id: 'registry', title: 'Реестр актов', icon: <IconList />, about: 'Все договоры ТП: акты, АВТУ и уведомления с текущим этапом согласования.' },
+      { id: 'approval', title: 'На согласовании', icon: <IconClock />, perm: 'tp.approve', about: 'Документы, ожидающие вашего решения: сверка с ТУ, замечания, согласование.' },
+      { id: 'upload', title: 'Загрузка на проверку', icon: <IconUpload />, perm: 'tp.create', about: 'ТУ и акт ТП (АВТУ, уведомление) в PDF — сверка с ТУ и проверки акта до отправки.' },
+      { id: 'create', title: 'Создание акта по ТУ', icon: <IconPlus />, perm: 'tp.create', about: 'Черновик акта ТП по данным технических условий — в разработке.' },
+      { id: 'books', title: 'Справочники', icon: <IconBook />, about: 'Номиналы ВА и ТТ, сечения ВЛ и КЛ, tg φ, доверенности.' },
     ],
   },
 ];
