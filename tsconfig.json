@@ -4,5 +4,5 @@
     "strict": true, "esModuleInterop": true, "skipLibCheck": true,
     "jsx": "react-jsx", "lib": ["ES2022", "DOM", "DOM.Iterable"], "noEmit": true
   },
-  "include": ["apps", "scripts", "tests"]
+  "include": ["apps/api/src/server.ts", "apps/web/src/main.tsx", "apps/web/src/vite-env.d.ts", "scripts/dev-db.ts", "tests/api.test.ts"]
 }
