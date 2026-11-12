@@ -1,0 +1,59 @@
+/* Дизайн-токены ЭнергоСферы. Цвета модулей задаются в modules/registry.tsx
+   (tint/accent/strong) и приходят в CSS переменными --tint/--accent/--accent-strong. */
+:root {
+  --graphite: #23272e;
+  --graphite-2: #2f343c;
+  --text: #1b2028;
+  --text-muted: #5f6873;
+  --text-soft: #8a929c;
+  --bg: #f5f4f0;            /* тёплый светлый фон контента */
+  --surface: #ffffff;
+  --surface-2: #f7f7f4;
+  --border: #e3e2dc;
+  --border-strong: #c9c8c1;
+  --danger: #c2413b;
+  --danger-bg: #fbeceb;
+  --warn: #9a6a12;
+  --warn-bg: #fbf1dc;
+  --ok: #2f7d4f;
+  --ok-bg: #e7f3ea;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 2px rgba(20, 24, 31, 0.05), 0 6px 22px rgba(20, 24, 31, 0.06);
+  --shadow-pop: 0 18px 50px rgba(20, 24, 31, 0.18);
+
+  /* Единые размеры элементов управления — одинаковы во всех модулях. */
+  --control-h: 44px;
+  --control-radius: 10px;
+  --control-font: 15px;
+
+  --topbar-h: 64px;
+  --ease: cubic-bezier(0.65, 0, 0.25, 1);
+  --morph: 620ms;           /* длительность перестройки колонок */
+
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+h1, h2, h3, h4, p { margin: 0; }
+:focus-visible { outline: 2.5px solid var(--accent-strong, #34548a); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --morph: 1ms; }
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

@@ -1,0 +1,85 @@
+import type { ReactNode } from 'react';
+import type { ModuleId, Permission } from '../../../api/src/core/access.js';
+import {
+  IconAlert, IconBars, IconBook, IconCalendar, IconCamera, IconClock, IconDoc, IconDocCheck, IconFolder,
+  IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget, IconTrend,
+  IconUpload, IconUser, IconUsers, IconWrench,
+} from '../ui/icons.js';
+
+export interface MenuItem {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  // Пункт виден только при этом праве (кроме права на сам раздел).
+  perm?: Permission;
+  // Что будет в разделе — показывается, пока раздел в разработке.
+  about: string;
+}
+
+export interface ModuleMeta {
+  id: ModuleId;
+  num: string;
+  title: string;
+  subtitle: string;
+  icon: ReactNode;
+  image: string;
+  // Цвета берутся с колонок дашборда и лепестков логотипа.
+  tint: string;      // фон колонки и меню модуля
+  accent: string;    // заливка основной кнопки
+  strong: string;    // текст/обводка акцента
+  view: Permission;
+  menu: MenuItem[];
+}
+
+export const MODULES: ModuleMeta[] = [
+  {
+    id: 'analysis', num: '01', title: 'Анализ потребления', subtitle: 'Балансы, динамика и отклонения',
+    icon: <IconBars />, image: '/img/analysis.png', tint: '#b6d1c8', accent: '#9fcab6', strong: '#2f6f58', view: 'analysis.view',
+    menu: [
+      { id: 'overview', title: 'Обзор', icon: <IconBars />, about: 'Сводка по выбранному РЭС и периоду: что требует внимания в первую очередь.' },
+      { id: 'balances', title: 'Балансы ТП', icon: <IconNetwork />, about: 'Баланс по каждой ТП: отпуск, полезный отпуск, потери и их динамика.' },
+      { id: 'dynamics', title: 'Динамика', icon: <IconTrend />, about: 'Помесячная динамика потребления по ТП и потребителю.' },
+      { id: 'deviations', title: 'Отклонения', icon: <IconAlert />, about: 'Подозрительные потребители и ПУ по правилам анализатора v5.7.' },
+      { id: 'reports', title: 'Отчёты', icon: <IconDoc />, perm: 'analysis.reports', about: 'Сохранённые отчёты и выгрузка в Excel.' },
+    ],
+  },
+  {
+    id: 'consumers', num: '02', title: 'Поиск потребителя', subtitle: 'Карточка потребителя\nМонтёр ↔ инженер реализации',
+    icon: <IconUser />, image: '/img/consumers.png', tint: '#b5c4dc', accent: '#a3b8d8', strong: '#34548a', view: 'consumers.view',
+    menu: [
+      { id: 'search', title: 'Поиск', icon: <IconSearch />, about: 'Поиск по номеру ПУ или лицевому счёту — карточка потребителя.' },
+      { id: 'field', title: 'Мои выезды', icon: <IconCamera />, perm: 'consumers.field', about: 'Фото, ПСУ и геоточка по карточке — уходят инженеру своего РЭС.' },
+      { id: 'inbox', title: 'Входящие от монтёров', icon: <IconInbox />, perm: 'consumers.complete', about: 'Новые фото, ПСУ и геоточки: скачать и отметить «Выполнено».' },
+      { id: 'registry', title: 'Реестр РЭС', icon: <IconUpload />, perm: 'consumers.registry', about: 'Загрузка расширенного списка потребителей своего РЭС.' },
+    ],
+  },
+  {
+    id: 'riru', num: '03', title: 'Инструкция начальника РИРУ', subtitle: 'Порядок работы\nи необходимые действия',
+    icon: <IconBook />, image: '/img/riru.png', tint: '#e4ccaa', accent: '#e2c391', strong: '#8a5a12', view: 'riru.view',
+    menu: [
+      { id: 'strategic', title: 'Стратегический план', icon: <IconTarget />, about: 'Цели на год и ключевые показатели.' },
+      { id: 'tactical', title: 'Тактический план', icon: <IconLayers />, about: 'Задачи на квартал и месяц, ответственные и сроки.' },
+      { id: 'operational', title: 'Оперативный план', icon: <IconCalendar />, about: 'Действия на неделю и день.' },
+      { id: 'technology', title: 'Технология работ', icon: <IconWrench />, about: 'Пошаговые инструкции по видам работ.' },
+      { id: 'docs', title: 'Нормативные документы', icon: <IconFolder />, about: 'Законы, приказы и распоряжения в PDF.' },
+    ],
+  },
+  {
+    id: 'tp', num: '04', title: 'Акты ТП', subtitle: 'Подготовка\nи согласование',
+    icon: <IconDocCheck />, image: '/img/tp.png', tint: '#c4b9d7', accent: '#bba9d6', strong: '#5e4387', view: 'tp.view',
+    menu: [
+      { id: 'registry', title: 'Реестр актов', icon: <IconList />, about: 'Все акты ТП с фильтрами по статусу и РЭС.' },
+      { id: 'new', title: 'Новый акт', icon: <IconPlus />, perm: 'tp.create', about: 'Подготовка акта по ТУ и уведомлению.' },
+      { id: 'approval', title: 'На согласовании', icon: <IconClock />, perm: 'tp.approve', about: 'Акты, ожидающие вашего решения.' },
+      { id: 'books', title: 'Справочники', icon: <IconBook />, about: 'Справочники и шаблоны документов.' },
+    ],
+  },
+];
+
+export const ADMIN_MENU: MenuItem[] = [
+  { id: 'users', title: 'Пользователи', icon: <IconUsers />, perm: 'admin.users', about: '' },
+  { id: 'roles', title: 'Права ролей', icon: <IconShield />, perm: 'admin.permissions', about: '' },
+  { id: 'res', title: 'Список РЭС', icon: <IconNetwork />, perm: 'admin.users', about: '' },
+];
+
+export const moduleById = (id: string) => MODULES.find(m => m.id === id);

@@ -1,0 +1,176 @@
+/* Оболочка: верхняя панель + «сцена» с четырьмя панелями модулей.
+   Панели позиционируются абсолютно (left/top/width/height считает Shell.tsx),
+   перестройка «колонки → полосы + меню» — это CSS-переходы этих свойств.
+   У каждой панели три слоя: колонка дашборда, вертикальная полоса и меню
+   модуля; виден слой текущего режима (panel--col / --strip / --side). */
+
+.app { display: grid; grid-template-rows: var(--topbar-h) 1fr; height: 100%; }
+
+/* ── Верхняя панель ──────────────────────────────────────────────────── */
+.topbar {
+  position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.brand { display: inline-flex; align-items: center; gap: 12px; padding: 6px 8px 6px 0; border: 0; background: none; cursor: pointer; }
+.brand__name { font-size: 22px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--graphite); }
+.topbar__right { display: flex; align-items: center; gap: 14px; }
+.topbar__org { font-size: 16px; color: var(--text); }
+.topbar__sep { width: 1px; height: 30px; background: var(--border-strong); }
+.icon-btn { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--graphite); cursor: pointer; }
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn--ring { border: 2px solid var(--graphite); width: 40px; height: 40px; }
+
+.usermenu { position: relative; }
+.usermenu__pop {
+  position: absolute; right: 0; top: calc(100% + 10px); width: 280px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-pop);
+  animation: pop-in .18s var(--ease);
+}
+.usermenu__who { display: grid; gap: 2px; padding: 10px 12px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.usermenu__who span { font-size: 13px; color: var(--text-muted); }
+.usermenu__item { display: flex; align-items: center; gap: 10px; width: 100%; height: var(--control-h); padding: 0 12px; border: 0; border-radius: 10px; background: none; font-size: 15px; cursor: pointer; text-align: left; }
+.usermenu__item:hover { background: var(--surface-2); }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-6px); } }
+
+/* ── Сфера-логотип ───────────────────────────────────────────────────── */
+.sphere { position: relative; display: inline-block; flex: none; }
+.sphere__spin { position: absolute; inset: 0; transition: transform var(--morph) var(--ease); }
+.sphere__petal { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .45s ease; }
+.sphere__petal.is-dim { opacity: .22; }
+
+/* ── Сцена и панели ──────────────────────────────────────────────────── */
+.stage { position: relative; overflow: hidden; background: var(--bg); }
+
+.panel {
+  position: absolute; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 88%, #fff) 0%, var(--tint) 60%);
+  box-shadow: inset -1px 0 0 rgba(20, 24, 31, .07);
+  transition: left var(--morph) var(--ease), top var(--morph) var(--ease),
+              width var(--morph) var(--ease), height var(--morph) var(--ease);
+}
+.panel--hidden { pointer-events: none; }
+/* Выбранная панель едет поверх остальных — они «уходят» под неё в полосы. */
+.panel--side { z-index: 3; }
+.panel--strip { z-index: 2; }
+
+.panel__col, .panel__strip, .panel__side {
+  position: absolute; inset: 0; opacity: 0; visibility: hidden;
+  transition: opacity .2s ease, visibility 0s linear .2s;
+}
+.panel--col .panel__col, .panel--strip .panel__strip, .panel--side .panel__side {
+  opacity: 1; visibility: visible;
+  transition: opacity .35s ease calc(var(--morph) * .55), visibility 0s;
+}
+
+/* Иллюстрация одна на панель и «перелетает» между режимами. */
+.panel__img {
+  position: absolute; z-index: 1; left: 50%; top: 47%; width: min(82%, 40vh); height: auto;
+  transform: translateX(-50%); pointer-events: none; user-select: none;
+  transition: left var(--morph) var(--ease), top var(--morph) var(--ease), width var(--morph) var(--ease),
+              transform var(--morph) var(--ease), opacity .3s ease, filter .3s ease;
+}
+.panel--strip .panel__img { top: 18px; width: 48px; }
+.panel--side .panel__img { left: 50%; top: 62px; width: 176px; }
+.panel--hidden .panel__img { opacity: 0; }
+
+/* Колонка дашборда */
+.panel__col {
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  padding: 44px clamp(24px, 2.6vw, 44px) 36px; border: 0; background: none; cursor: pointer; z-index: 2;
+}
+.panel__num { display: inline-flex; align-items: center; gap: 16px; font-size: 28px; font-weight: 450; color: #1d2630; }
+.panel__num i { width: 1.5px; height: 32px; background: currentColor; opacity: .55; }
+.panel__num svg { width: 36px; height: 36px; }
+.panel__title { margin-top: clamp(28px, 6vh, 64px); font-size: clamp(30px, 4.6vh, 50px); line-height: 1.07; font-weight: 750; letter-spacing: -0.015em; color: #141c25; }
+.panel__subtitle { margin-top: 18px; font-size: clamp(16px, 2.3vh, 21px); line-height: 1.4; color: #28323d; white-space: pre-line; }
+.panel__open { margin-top: auto; display: inline-flex; align-items: center; gap: 16px; font-size: 19px; color: #1d2630; }
+.panel--col:hover { filter: brightness(1.03); }
+.panel--col:hover .panel__img { transform: translateX(-50%) translateY(-8px) scale(1.03); }
+.panel__col:focus-visible { outline-offset: -6px; }
+
+.panel.is-locked .panel__col { cursor: not-allowed; }
+.panel.is-locked .panel__img { filter: grayscale(.7); opacity: .5; }
+.panel.is-locked .panel__title, .panel.is-locked .panel__subtitle { opacity: .55; }
+
+/* Свёрнутая полоса */
+.panel__strip { border: 0; background: none; cursor: pointer; z-index: 2; }
+.panel__strip span {
+  position: absolute; top: 88px; left: 50%; transform: translateX(-50%) rotate(180deg);
+  writing-mode: vertical-rl; white-space: nowrap; font-size: 20px; font-weight: 500; color: #1d2630;
+}
+.panel--strip:hover { filter: brightness(1.05); }
+
+/* Меню открытого модуля */
+.panel__side { display: flex; flex-direction: column; padding: 22px 18px 18px; overflow-y: auto; z-index: 2; }
+.side__back { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px; margin-left: -10px; border: 0; border-radius: 10px; background: none; font-size: 16px; cursor: pointer; color: inherit; }
+.side__back:hover { background: rgba(255, 255, 255, .35); }
+.side__title { margin-top: 170px; font-size: 30px; line-height: 1.12; font-weight: 750; letter-spacing: -0.01em; color: #141c25; hyphens: manual; }
+.side__menu { display: grid; gap: 6px; margin-top: 26px; }
+.side__item {
+  display: flex; align-items: center; gap: 14px; height: 50px; padding: 0 16px; border: 0; border-radius: 12px;
+  background: transparent; font-size: 16px; font-weight: 500; color: #1d2630; text-align: left; cursor: pointer;
+  transition: background-color .15s;
+}
+.side__item svg { flex: none; width: 22px; height: 22px; }
+.side__item:hover { background: rgba(255, 255, 255, .38); }
+.side__item.is-active { background: rgba(255, 255, 255, .82); box-shadow: 0 1px 3px rgba(20, 24, 31, .08); }
+.side__foot { margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(20, 24, 31, .16); font-size: 14px; color: #4a5562; }
+
+/* Панель администрирования — графит */
+.panel--admin { background: var(--graphite); color: #eef0f3; }
+.panel--admin .side__badge { display: inline-grid; place-items: center; width: 64px; height: 64px; margin-top: 40px; border-radius: 18px; background: rgba(255, 255, 255, .08); }
+.panel--admin .side__title { margin-top: 18px; color: #fff; }
+.panel--admin .side__item { color: #d9dde4; }
+.panel--admin .side__item:hover { background: rgba(255, 255, 255, .08); }
+.panel--admin .side__item.is-active { background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
+.panel--admin .side__back:hover { background: rgba(255, 255, 255, .08); }
+.panel--admin .side__foot { border-top-color: rgba(255, 255, 255, .14); color: #9aa3ae; }
+
+/* ── Контент ─────────────────────────────────────────────────────────── */
+.content {
+  position: absolute; right: 0; bottom: 0; overflow-y: auto; padding: 30px clamp(20px, 3vw, 44px) 56px;
+  transition: left var(--morph) var(--ease), top var(--morph) var(--ease);
+}
+.stage--home .content { visibility: hidden; }
+.content__inner { max-width: 1320px; animation: content-in .45s var(--ease) calc(var(--morph) * .5) both; }
+@keyframes content-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* ── Экран загрузки ──────────────────────────────────────────────────── */
+.screen { min-height: 100%; display: grid; place-items: center; padding: 24px; background: var(--bg); }
+.splash { display: grid; justify-items: center; gap: 18px; color: var(--text-muted); }
+.splash__sphere { animation: splash-spin 1.6s var(--ease) 3; }
+@keyframes splash-spin { to { transform: rotate(-360deg); } }
+
+/* ── Телефон: колонки — строки, полосы скрыты, меню модуля — горизонтально ─ */
+@media (max-width: 900px) {
+  .topbar { padding: 0 12px; }
+  .brand__name { font-size: 18px; }
+  .topbar__org, .topbar__sep { display: none; }
+
+  .panel { box-shadow: inset 0 -1px 0 rgba(20, 24, 31, .07); }
+  .panel__col { padding: 16px 18px; }
+  .panel__num { gap: 10px; font-size: 18px; }
+  .panel__num i { height: 20px; }
+  .panel__num svg { width: 24px; height: 24px; }
+  .panel__title { margin-top: 6px; max-width: 64%; font-size: clamp(18px, 2.7vh, 23px); }
+  .panel__subtitle { margin-top: 6px; max-width: 58%; font-size: 13px; }
+  .panel__open { font-size: 15px; gap: 10px; }
+  .panel__open svg { width: 22px; height: 22px; }
+  .panel--col .panel__img { left: 79%; top: 50%; width: min(36%, 19vh); transform: translate(-50%, -50%); }
+  .panel--col:hover .panel__img { transform: translate(-50%, -50%); }
+  .panel--side .panel__img { opacity: 0; }
+
+  .panel__side { padding: 10px 12px 10px; overflow: hidden; }
+  .side__back { height: 34px; font-size: 14px; }
+  .side__title { margin-top: 2px; font-size: 22px; }
+  .side__menu { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .side__item { height: 40px; padding: 0 14px; font-size: 15px; white-space: nowrap; flex: none; }
+  .side__item svg { width: 18px; height: 18px; }
+  .side__foot, .panel--admin .side__badge { display: none; }
+  .panel--admin .side__title { margin-top: 2px; }
+
+  .content { padding: 18px 14px 40px; }
+  .page-head__title { font-size: 26px; }
+  .page-head__subtitle { font-size: 15px; }
+  .card { padding: 18px; border-radius: 14px; }
+}

@@ -1,0 +1,24 @@
+/* Экран входа и служебные экраны (ожидание роли, блокировка, ошибка). */
+.screen--login {
+  background:
+    radial-gradient(520px 420px at 12% 18%, rgba(182, 209, 200, .55), transparent 70%),
+    radial-gradient(520px 420px at 88% 16%, rgba(181, 196, 220, .55), transparent 70%),
+    radial-gradient(520px 420px at 86% 88%, rgba(228, 204, 170, .55), transparent 70%),
+    radial-gradient(520px 420px at 14% 86%, rgba(196, 185, 215, .55), transparent 70%),
+    var(--bg);
+}
+.login {
+  display: grid; justify-items: center; gap: 16px; width: min(420px, 100%); padding: 36px 32px 30px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow-pop);
+  --accent: #d9dde4; --accent-strong: #23272e;
+}
+.login .field { width: 100%; }
+.login__brand { margin-top: 6px; font-size: 28px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--graphite); }
+.login__tagline { margin-top: -10px; margin-bottom: 8px; font-size: 16px; letter-spacing: .08em; color: var(--text-muted); }
+.login__title { font-size: 24px; font-weight: 750; text-align: center; }
+.login__text { text-align: center; color: var(--text-muted); }
+.login__actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.login__error { width: 100%; padding: 10px 14px; border-radius: 10px; background: var(--danger-bg); color: var(--danger); font-size: 14px; }
+.login__submit { width: 100%; background: var(--graphite); color: #fff; }
+.login__submit:not(:disabled):hover { background: var(--graphite-2); }
+.login__hint { font-size: 13px; color: var(--text-soft); }
