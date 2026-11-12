@@ -38,9 +38,9 @@ export const PERMISSION_GROUPS: Record<PermissionGroup, string> = {
 };
 
 export const PERMISSIONS = {
-  'analysis.view':            { group: 'analysis',  title: 'Открывать раздел' },
-  'analysis.upload':          { group: 'analysis',  title: 'Загружать файлы для анализа' },
-  'analysis.reports':         { group: 'analysis',  title: 'Сохранять и выгружать отчёты' },
+  // Анализ идёт целиком в браузере и ничего не хранит на сервере — других прав
+  // у раздела нет: проверить их было бы нечем.
+  'analysis.view':            { group: 'analysis',  title: 'Открывать раздел (анализ идёт в браузере, данные не сохраняются)' },
   'consumers.view':           { group: 'consumers', title: 'Открывать раздел и искать по № ПУ / ЛС' },
   'consumers.registry':       { group: 'consumers', title: 'Загружать расширенный реестр своего РЭС' },
   'consumers.field':          { group: 'consumers', title: 'Прикладывать фото, ПСУ и геоточку' },
@@ -63,13 +63,13 @@ export const isPermission = (value: unknown): value is Permission => typeof valu
 // Дальше всё правится в админке.
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: PERMISSION_IDS,
-  nach_res: ['analysis.view', 'analysis.reports', 'consumers.view', 'consumers.complete', 'riru.view', 'tp.view', 'tp.approve'],
-  nach_riru: ['analysis.view', 'analysis.upload', 'analysis.reports', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'riru.edit'],
-  eng_realization: ['analysis.view', 'analysis.upload', 'analysis.reports', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view'],
+  nach_res: ['analysis.view', 'consumers.view', 'consumers.complete', 'riru.view', 'tp.view', 'tp.approve'],
+  nach_riru: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'riru.edit'],
+  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view'],
   eng_development: ['consumers.view', 'riru.view', 'tp.view', 'tp.create'],
   monter: ['consumers.view', 'consumers.field'],
-  nach_sue: ['analysis.view', 'analysis.upload', 'analysis.reports', 'consumers.view', 'riru.view', 'riru.docs'],
-  eng_sue: ['analysis.view', 'analysis.upload', 'analysis.reports', 'consumers.view', 'riru.view'],
+  nach_sue: ['analysis.view', 'consumers.view', 'riru.view', 'riru.docs'],
+  eng_sue: ['analysis.view', 'consumers.view', 'riru.view'],
   nach_stp: ['analysis.view', 'tp.view', 'tp.approve'],
   eng_stp: ['analysis.view', 'tp.view', 'tp.create'],
 };

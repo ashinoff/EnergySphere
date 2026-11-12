@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import type { ModuleId, Permission } from '../../../api/src/core/access.js';
 import {
-  IconAlert, IconBars, IconBook, IconCalendar, IconCamera, IconClock, IconDoc, IconDocCheck, IconFolder,
-  IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget, IconTrend,
+  IconBars, IconCheckCircle, IconCpu, IconPie, IconScale, IconSliders, IconBook, IconCalendar, IconCamera, IconClock, IconDocCheck, IconFolder,
+  IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget,
   IconUpload, IconUser, IconUsers, IconWrench,
 } from '../ui/icons.js';
 
@@ -35,12 +35,15 @@ export const MODULES: ModuleMeta[] = [
   {
     id: 'analysis', num: '01', title: 'Анализ потребления', subtitle: 'Балансы, динамика и отклонения',
     icon: <IconBars />, image: '/img/analysis.png', tint: '#b6d1c8', accent: '#9fcab6', strong: '#2f6f58', view: 'analysis.view',
+    // Пункты = вкладки анализатора (id совпадают с data-tab в public/analysis).
     menu: [
-      { id: 'overview', title: 'Обзор', icon: <IconBars />, about: 'Сводка по выбранному РЭС и периоду: что требует внимания в первую очередь.' },
-      { id: 'balances', title: 'Балансы ТП', icon: <IconNetwork />, about: 'Баланс по каждой ТП: отпуск, полезный отпуск, потери и их динамика.' },
-      { id: 'dynamics', title: 'Динамика', icon: <IconTrend />, about: 'Помесячная динамика потребления по ТП и потребителю.' },
-      { id: 'deviations', title: 'Отклонения', icon: <IconAlert />, about: 'Подозрительные потребители и ПУ по правилам анализатора v5.7.' },
-      { id: 'reports', title: 'Отчёты', icon: <IconDoc />, perm: 'analysis.reports', about: 'Сохранённые отчёты и выгрузка в Excel.' },
+      { id: 'rank', title: 'Рейтинг риска', icon: <IconBars />, about: 'Приборы учёта по риску недоучёта: признаки, график и оценка объёма.' },
+      { id: 'bal', title: 'Баланс ТП', icon: <IconScale />, about: 'Отпуск в сеть, полезный отпуск, нормативные и сверхнормативные потери.' },
+      { id: 'check', title: 'Контроль выборки', icon: <IconCheckCircle />, about: 'Сверка результатов проверок с рейтингом.' },
+      { id: 'context', title: 'Состав ТП', icon: <IconPie />, about: 'Доли физ. и юр. лиц, пресеты анализа по ТП.' },
+      { id: 'settings', title: 'Настройки', icon: <IconSliders />, about: 'Пресеты, чувствительность алгоритмов и приоритеты проверки.' },
+      { id: 'algs', title: 'Алгоритмы', icon: <IconCpu />, about: 'Какие признаки сработали и сколько раз.' },
+      { id: 'doc', title: 'Методика', icon: <IconList />, about: 'Порядок работы: от кабинетного анализа до оформления акта.' },
     ],
   },
   {

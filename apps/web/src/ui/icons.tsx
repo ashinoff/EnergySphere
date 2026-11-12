@@ -43,3 +43,7 @@ export const IconCheck = (p: P) => <svg {...base(p)}><path d="m5 12.5 4.5 4.5L19
 export const IconTrash = (p: P) => <svg {...base(p)}><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13" /></svg>;
 export const IconEdit = (p: P) => <svg {...base(p)}><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>;
 export const IconCalendar = (p: P) => <svg {...base(p)}><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>;
+export const IconCheckCircle = (p: P) => <svg {...base(p)}><circle cx="12" cy="12" r="8.5" /><path d="m7.5 12 3 3 6-6" /></svg>;
+export const IconPie = (p: P) => <svg {...base(p)}><path d="M12 3v9h9" /><path d="M9 3.5A9 9 0 1 0 20.5 15" /></svg>;
+export const IconSliders = (p: P) => <svg {...base(p)}><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>;
+export const IconCpu = (p: P) => <svg {...base(p)}><rect x="7" y="7" width="10" height="10" rx="2" /><path d="M12 3v4M12 17v4M3 12h4M17 12h4" /></svg>;

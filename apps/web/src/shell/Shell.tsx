@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { ModuleId } from '../../../api/src/core/access.js';
 import { useAuth, useMe } from '../auth/AuthContext.js';
 import { ADMIN_MENU, MODULES, moduleById, type MenuItem, type ModuleMeta } from '../modules/registry.js';
 import { ModulePage } from '../modules/ModulePage.js';
+import { AnalysisHost } from '../modules/analysis/AnalysisHost.js';
 import { AdminPage } from '../admin/AdminPage.js';
 import { IconArrowLeft, IconArrowRight, IconLock, IconSettings } from '../ui/icons.js';
 import { useToast } from '../ui/kit.js';
@@ -89,12 +90,25 @@ export function Shell() {
     ? { '--tint': activeModule.tint, '--accent': activeModule.accent, '--accent-strong': activeModule.strong } as CSSProperties
     : { '--tint': '#2b3038', '--accent': '#d9dde4', '--accent-strong': '#23272e' } as CSSProperties;
 
+  // Возврат в модуль (с дашборда или из полосы) — на тот раздел, где был.
+  const lastPages = useRef<Record<string, string>>({});
+  if (effective.view === 'module') lastPages.current[effective.id] = effective.page;
   const open = (m: ModuleMeta) => {
     if (!can(m.view)) { toast('Нет доступа к разделу. Обратитесь к администратору.', 'error'); return; }
-    go({ view: 'module', id: m.id, page: m.menu[0].id });
+    go({ view: 'module', id: m.id, page: lastPages.current[m.id] ?? m.menu[0].id });
   };
 
   const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i => !i.perm || i.perm === view || can(i.perm));
+
+  // Анализатор создаётся при первом открытии модуля и дальше не пересоздаётся,
+  // чтобы загруженный файл переживал переходы по разделам.
+  const inAnalysis = effective.view === 'module' && effective.id === 'analysis';
+  const analysisPage = inAnalysis ? effective.page : '';
+  const [analysisSeen, setAnalysisSeen] = useState(false);
+  useEffect(() => { if (inAnalysis) setAnalysisSeen(true); }, [inAnalysis]);
+  const analysisModule = moduleById('analysis')!;
+  const lastAnalysisPage = useRef('rank');
+  if (analysisPage) lastAnalysisPage.current = analysisPage;
 
   return (
     <div className="app">
@@ -165,8 +179,12 @@ export function Shell() {
           </div>
         </section>
 
-        <div className="content" style={content}>
-          {effective.view === 'module' && activeModule && (
+        <div className={`content ${inAnalysis ? 'content--frame' : ''}`} style={content}>
+          {analysisSeen && (
+            <AnalysisHost module={analysisModule} visible={inAnalysis}
+              page={analysisModule.menu.find(i => i.id === lastAnalysisPage.current) ?? analysisModule.menu[0]} />
+          )}
+          {effective.view === 'module' && activeModule && !inAnalysis && (
             <div className="content__inner" key={`${effective.id}/${effective.page}`}>
               <ModulePage module={activeModule} page={visibleMenu(activeModule.menu, activeModule.view).find(i => i.id === effective.page)
                 ?? activeModule.menu[0]} />

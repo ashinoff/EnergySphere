@@ -133,6 +133,13 @@
 }
 .stage--home .content { visibility: hidden; }
 .content__inner { max-width: 1320px; animation: content-in .45s var(--ease) calc(var(--morph) * .5) both; }
+/* Модуль-фрейм (анализ потребления): заголовок сверху, фрейм на всю оставшуюся высоту,
+   прокрутка — внутри фрейма. */
+.content--frame { overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0; }
+.analysis { display: flex; flex-direction: column; flex: 1; min-height: 0; animation: content-in .45s var(--ease) calc(var(--morph) * .5) both; }
+.analysis[hidden] { display: none; }
+.analysis .page-head { margin-bottom: 14px; }
+.analysis__frame { flex: 1; min-height: 0; width: 100%; border: 0; background: var(--bg); }
 @keyframes content-in { from { opacity: 0; transform: translateY(14px); } }
 
 /* ── Экран загрузки ──────────────────────────────────────────────────── */
