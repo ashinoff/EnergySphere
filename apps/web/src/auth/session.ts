@@ -15,7 +15,13 @@ let refreshing: Promise<boolean> | null = null;
 const listeners = new Set<() => void>();
 
 function load(): Stored | null {
-  try { return JSON.parse(localStorage.getItem(KEY) ?? 'null'); } catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Stored | null;
+    // Токен платформы из прошлого сеанса без refresh уже не продлить — не
+    // начинаем с заведомо мёртвого (иначе первый запрос — 401 и экран ошибки).
+    if (stored && !stored.refreshToken && stored.expiresAt - Date.now() < 15_000) return null;
+    return stored;
+  } catch { return null; }
 }
 function save(next: Stored | null) {
   session = next;
@@ -77,10 +83,12 @@ async function authorized(path: string, init: RequestInit & { json?: unknown }):
     return fetch(path, { ...init, headers, body: init.json !== undefined ? JSON.stringify(init.json) : init.body })
       .catch(() => { throw new ApiError(0, 'Нет связи с сервером. Проверьте интернет.'); });
   };
+  // Внутри платформы продлевать нечем — заранее просим у неё свежий токен.
+  if (EMBEDDED && session && !session.refreshToken && session.expiresAt - Date.now() < 30_000) await platformToken();
   let response = await send();
   if (response.status === 401 && session) {
     if (await refresh()) response = await send();
-    else if (EMBEDDED) askPlatform();
+    else if (EMBEDDED && await platformToken()) response = await send();
     else save(null);
   }
   if (!response.ok) throw await readError(response);
@@ -102,13 +110,34 @@ function askPlatform() {
   window.parent?.postMessage({ type: 'app-ready' }, PLATFORM_ORIGIN);
 }
 
+// Срок жизни берём из самого токена (claim exp), а не угадываем.
+function expiresAtOf(token: string) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: number };
+    if (payload.exp) return payload.exp * 1000;
+  } catch { /* не JWT — ниже запасной срок */ }
+  return Date.now() + 4 * 60_000;
+}
+
+// Попросить у платформы новый токен и дождаться его (до 6 с). true — пришёл.
+const waiting = new Set<(ok: boolean) => void>();
+function platformToken(): Promise<boolean> {
+  return new Promise(resolve => {
+    const done = (ok: boolean) => { clearTimeout(timer); waiting.delete(done); resolve(ok); };
+    const timer = setTimeout(() => done(false), 6000);
+    waiting.add(done);
+    askPlatform();
+  });
+}
+
 export function listenPlatform() {
   if (!EMBEDDED) return () => {};
   const onMessage = (event: MessageEvent) => {
     if (event.origin !== PLATFORM_ORIGIN) return;
     const data = event.data as { type?: string; token?: unknown };
     if (data?.type !== 'platform-auth' || typeof data.token !== 'string') return;
-    save({ accessToken: data.token, refreshToken: null, expiresAt: Date.now() + 4 * 60_000 });
+    save({ accessToken: data.token, refreshToken: null, expiresAt: expiresAtOf(data.token) });
+    [...waiting].forEach(done => done(true));
   };
   window.addEventListener('message', onMessage);
   askPlatform();

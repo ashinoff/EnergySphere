@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ApiError, api, hasSession, listenPlatform, onSessionChange } from './session.js';
 import type { Permission } from '../../../api/src/core/access.js';
 
@@ -32,6 +32,8 @@ const AuthCtx = createContext<Auth | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(hasSession() ? { phase: 'loading' } : { phase: 'anonymous' });
+  const phase = useRef(state.phase);
+  phase.current = state.phase;
 
   const reload = useCallback(() => {
     if (!hasSession()) { setState({ phase: 'anonymous' }); return; }
@@ -49,8 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stopPlatform = listenPlatform();
     const stopSession = onSessionChange(() => {
       const now = hasSession();
-      // Перечитываем профиль только при входе/выходе, а не при каждом продлении токена.
-      if (now !== had) { had = now; reload(); }
+      // Перечитываем профиль при входе/выходе, а также когда пришёл новый токен,
+      // а профиль так и не загрузился (платформа ответила с опозданием).
+      // Обычное продление токена профиль не трогает.
+      if (now !== had || (now && phase.current === 'error')) { had = now; reload(); }
     });
     return () => { stopPlatform(); stopSession(); };
   }, [reload]);
