@@ -1,6 +1,7 @@
 import { config } from './config.js';
 import { createPool } from './db.js';
 import { migrate } from './migrate.js';
+import { resetDatabaseOnce } from './reset.js';
 import { createApp } from './app.js';
 import { AccessService } from './core/access-service.js';
 import { createTokenClient, createVerifier } from './core/keycloak.js';
@@ -17,6 +18,10 @@ for (let attempt = 1; ; attempt++) {
     console.log(`[db] нет подключения (попытка ${attempt}), повтор через 3 с`);
     await new Promise(r => setTimeout(r, 3000));
   }
+}
+
+if (process.env.RESET_DATABASE_URL) {
+  await resetDatabaseOnce(process.env.RESET_DATABASE_URL, process.env.RESET_CONFIRM ?? '');
 }
 
 await migrate(db, config.migrationsPath);

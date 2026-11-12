@@ -77,6 +77,16 @@ npm run build         # typecheck + сборка API и UI
 
 ## Журнал (агент ведёт сам, новые записи сверху)
 
+- **2026-11-12** — Деплой: Amvera Miami, проект `tp-approval` (бывший TP_Approval),
+  `https://tp-approval-ashinoff.mia0.amvera.tech`, база `tp-approval-db`
+  (`cnpg-tp-approval-db-rw`, база `tpapprovaldb`, владелец `admin`). Репозиторий
+  Amvera переключён на EnergySphere **слиянием** — в нём остались файлы TP_Approval,
+  поэтому tsconfig собирает только от точек входа (server.ts, main.tsx). Учёт
+  миграций — `public.es_schema_migrations`. По решению владельца база очищается
+  полностью разово: `reset.ts` при `RESET_DATABASE_URL` (суперпользователь) +
+  `RESET_CONFIRM=tpapprovaldb`, отметка `public.es_reset_done`; после очистки
+  переменные удалить. Плитка в платформе: id `sphere`, роль `sphere-user`.
+
 - **2026-11-12** — Этап 0, каркас. Ядро: схемы `core/analysis/consumers/riru/tp`,
   таблицы `core.res` (7 РЭС Сочи), `core.users`, `core.role_permissions`, `core.audit`;
   10 ролей (админ; нач. РЭС, нач. РИРУ, инж. реализации, инж. развития, монтёр — свой
