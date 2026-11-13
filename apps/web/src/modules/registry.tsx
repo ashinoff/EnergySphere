@@ -35,8 +35,10 @@ export const MODULES: ModuleMeta[] = [
   {
     id: 'analysis', num: '01', title: 'Анализ потребления', subtitle: 'Балансы, динамика и отклонения',
     icon: <IconBars />, image: '/img/analysis.png', tint: '#b6d1c8', accent: '#9fcab6', strong: '#2f6f58', view: 'analysis.view',
-    // Пункты = вкладки анализатора (id совпадают с data-tab в public/analysis).
+    // Пункты = вкладки анализатора (id совпадают с data-tab в public/analysis),
+    // кроме «Загрузки данных» — её показывает мост (es-bridge.js) поверх вкладок.
     menu: [
+      { id: 'load', title: 'Загрузка данных', icon: <IconUpload />, about: 'Выгрузка потребления (.xlsx / .csv), формат периодов, тариф — и что анализатор нашёл в файле.' },
       { id: 'rank', title: 'Рейтинг риска', icon: <IconBars />, about: 'Приборы учёта по риску недоучёта: признаки, график и оценка объёма.' },
       { id: 'bal', title: 'Баланс ТП', icon: <IconScale />, about: 'Отпуск в сеть, полезный отпуск, нормативные и сверхнормативные потери.' },
       { id: 'check', title: 'Контроль выборки', icon: <IconCheckCircle />, about: 'Сверка результатов проверок с рейтингом.' },

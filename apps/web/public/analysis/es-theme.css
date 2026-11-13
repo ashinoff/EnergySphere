@@ -41,30 +41,35 @@ header .head,.tabs{display:none !important}
 #meta{max-width:none !important;padding:0 0 6px !important;color:var(--mut) !important;font-size:14px !important}
 .wrap{max-width:none !important;padding:0 2px 48px !important}
 
-/* Кнопки — как в наборе Сферы: одна высота, один шрифт, графитовая рамка. */
+/* Кнопки — одна высота и шрифт Сферы, в тонах мягкого зелёного меню модуля
+   (#b6d1c8): заливка меню, при наведении — тон темнее. */
 .btn,.btn:not(:disabled){
   height:44px !important;min-height:44px !important;padding:0 18px !important;
   display:inline-flex !important;align-items:center;justify-content:center;gap:8px;
-  border:1.5px solid #23272e !important;border-radius:10px !important;
-  background:#fff !important;color:#23272e !important;
+  border:0 !important;border-radius:10px !important;
+  background:#b6d1c8 !important;color:#1b2028 !important;
   font:600 15px/1 var(--es-font) !important;letter-spacing:0 !important;text-transform:none !important;
   box-shadow:none !important;transform:none !important;
-  transition:background-color .15s,border-color .15s,color .15s !important;
+  transition:background-color .15s,color .15s !important;
 }
-.btn:not(:disabled):hover{background:#f7f7f4 !important;color:#23272e !important}
-.btn:not(:disabled):active{background:#ebeae4 !important}
-.btn:disabled{height:44px !important;opacity:.45;border:1.5px solid #c9c8c1 !important;background:#fff !important;box-shadow:none !important}
-.btn-reset:not(:disabled):hover{border-color:#c2413b !important;color:#c2413b !important;background:#fbeceb !important}
+.btn:not(:disabled):hover{background:#a3c6b9 !important;color:#1b2028 !important}
+.btn:not(:disabled):active{background:#8fbaa9 !important}
+.btn:disabled{height:44px !important;opacity:.45;border:0 !important;background:#dbe9e3 !important;box-shadow:none !important}
+.btn-reset:not(:disabled):hover{color:#c2413b !important;background:#fbeceb !important}
 
-/* Переключатели-сегменты — как вкладки Сферы */
-.seg{border:0 !important;border-radius:12px !important;background:#ebeae4 !important;padding:4px !important;gap:4px !important;box-shadow:none !important}
+/* Переключатели-сегменты — подложка светло-зелёная, выбранный — тон меню */
+.seg{border:0 !important;border-radius:12px !important;background:#e3efe9 !important;padding:4px !important;gap:4px !important;box-shadow:none !important}
 .seg button,.seg button:not(.on):not(:disabled){
   min-height:36px !important;padding:0 14px !important;border:0 !important;border-radius:9px !important;
   font:600 14px/1 var(--es-font) !important;letter-spacing:0 !important;text-transform:none !important;
-  color:var(--mut) !important;background:transparent !important;box-shadow:none !important;
+  color:#3f5a50 !important;background:transparent !important;box-shadow:none !important;
 }
-.seg button:not(.on):not(:disabled):hover{color:var(--ink) !important;background:rgba(255,255,255,.5) !important}
-.seg button.on{background:#fff !important;color:var(--ink) !important;box-shadow:0 1px 3px rgba(0,0,0,.08) !important}
+.seg button:not(.on):not(:disabled):hover{color:var(--ink) !important;background:rgba(255,255,255,.6) !important}
+.seg button.on{background:#b6d1c8 !important;color:#1b2028 !important;box-shadow:none !important}
+
+/* Заголовки разделов и шапки таблиц — зелёный модуля */
+.doc h2,.pane h2,.tuner h3,#algs h2,#algs h3{color:#2f6f58 !important}
+.thead{background:#e3efe9 !important;border-color:#cfe2da !important;color:#2f6f58 !important}
 
 /* Поля ввода */
 .tariff input,.rmthr input,#rankSearch,input[type=search],input[type=text],input[inputmode]{
@@ -90,3 +95,14 @@ input:focus{outline:none !important;border-color:var(--es-strong) !important;box
 .note{border-color:var(--line) !important;color:var(--mut) !important}
 .kpi,.balrow{background:#fff !important;border-color:var(--line) !important;border-radius:14px !important;box-shadow:var(--shadow-soft) !important}
 .kl{font-family:var(--es-font) !important;letter-spacing:.04em !important}
+
+/* ── Что показывать в каком разделе (раздел — body[data-es-page], es-bridge.js) ──
+   Загрузка файла, источник, формат, тариф и заметки о файле — только в «Загрузке
+   данных»; итоги-плитки — в рейтинге; сводка баланса — в балансе; короткая строка
+   «Состав ТП» — в составе ТП. Вкладки анализатора в «Загрузке» не показываются. */
+body:not([data-es-page=load]) :is(.deck,#meta,#notes){display:none !important}
+body[data-es-page=load] .pane{display:none !important}
+body:not([data-es-page=rank]) #kpi{display:none !important}
+body:not([data-es-page=bal]) #balance{display:none !important}
+body:not([data-es-page=context]) #tpOverviewQuick{display:none !important}
+body[data-es-page=load] #meta{padding:4px 0 10px !important;font-size:15px !important}
