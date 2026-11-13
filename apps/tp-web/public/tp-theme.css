@@ -96,3 +96,81 @@ html body .upload-head-help svg{color:#9a6a12!important}
 /* Свою форму входа TP не показывает: вход — токеном Сферы (оболочка держит фрейм
    скрытым, пока TP не вошёл; это — страховка от мигания). */
 html body .login-screen,html body .login-card{display:none!important}
+
+/* ── Доводка по замечаниям владельца (13.11) ─────────────────────────────
+   Шапки справочников, синхронизации и сервиса — мягкий лиловый меню модуля
+   (#c4b9d7), текст тёмный; вкладки на ней — как вкладки Сферы; основная кнопка
+   на шапке — темнее (#5e4387). Шапка документа (акт) остаётся графитовой. */
+html body .reference-books>.navy-head,
+html body .sync-panel>.navy-head,
+html body .service-menu .navy-head{background:#c4b9d7!important;color:#1b2028!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.queue-switch,.doc-type-switch){background:rgba(255,255,255,.35)!important;border-radius:12px!important;padding:4px!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.queue-switch,.doc-type-switch)>button:not(.zz):not(.zy){color:#1b2028!important;background:transparent!important;border:0!important;box-shadow:none!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.queue-switch,.doc-type-switch)>button>svg{border-color:rgba(27,32,40,.18)!important;background:rgba(255,255,255,.5)!important;color:#5e4387!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.queue-switch,.doc-type-switch)>button:hover:not(:disabled):not([aria-pressed=true]){background:rgba(255,255,255,.45)!important;color:#1b2028!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]{background:#fff!important;color:#1b2028!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.primary-button,.secondary-button){background:#5e4387!important;color:#fff!important;border:0!important}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.primary-button,.secondary-button):hover:not(:disabled){background:#4b356d!important}
+/* Синхронизация: пояснение уже есть в заголовке страницы Сферы */
+html body .sync-help{display:none!important}
+html body .sync-title{color:#1b2028!important}
+/* Счётчики-вкладки синхронизации — как вкладки Сферы */
+html body .sync-tabs{background:#ebeae4!important;border:0!important;border-radius:12px!important;padding:4px!important;box-shadow:none!important}
+html body .sync-tabs>button:not(.zz):not(.zy){background:transparent!important;border:0!important;box-shadow:none!important;color:#5f6873!important;border-radius:9px!important;font-weight:600!important}
+html body .sync-tabs>button[aria-pressed=true]{background:#fff!important;color:#1b2028!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+html body .sync-tabs .tab-count{background:rgba(0,0,0,.07)!important;color:inherit!important;border:0!important}
+
+/* Реестр: «Сбросить фильтры» — мягкий лиловый; «Дополнительные условия» —
+   без слов, кнопкой-галочкой того же цвета рядом с ней. */
+html body .registry-controls{position:relative!important}
+html body .registry-toolbar{padding-right:54px!important}
+html body .registry-toolbar>.secondary-button{background:#c4b9d7!important;border:0!important;color:#1b2028!important}
+html body .registry-toolbar>.secondary-button:hover:not(:disabled){background:#b5a7cc!important}
+html body .extra-filters{margin-top:10px!important}
+html body .extra-filters>summary{
+  position:absolute!important;top:17px;right:18px;width:44px;height:44px;border-radius:10px;
+  background:#c4b9d7;font-size:0!important;list-style:none;cursor:pointer;display:grid!important;place-items:center;
+  transition:background-color .15s;
+}
+html body .extra-filters>summary::-webkit-details-marker{display:none}
+html body .extra-filters>summary::after{
+  content:"";width:9px;height:9px;border-right:2.2px solid #1b2028;border-bottom:2.2px solid #1b2028;
+  transform:translateY(-2px) rotate(45deg);transition:transform .2s;
+}
+html body .extra-filters[open]>summary::after{transform:translateY(2px) rotate(-135deg)}
+html body .extra-filters>summary:hover{background:#b5a7cc}
+html body .extra-filters:not([open]){margin-top:0!important}
+
+/* Сервис: строки проверок без цветной полосы слева; «Миграции базы» — кнопкой раскрытия. */
+html body .service-issues>li{border-left-width:1px!important;border-left-color:#e3e2dc!important}
+html body .service-migrations>summary{
+  display:inline-flex!important;align-items:center;gap:10px;min-height:44px;padding:0 18px;border-radius:10px;
+  background:#5e4387;color:#fff!important;font-weight:600;cursor:pointer;list-style:none;
+}
+html body .service-migrations>summary::-webkit-details-marker{display:none}
+html body .service-migrations>summary::after{
+  content:"";width:8px;height:8px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:translateY(-2px) rotate(45deg);transition:transform .2s;
+}
+html body .service-migrations[open]>summary::after{transform:translateY(2px) rotate(-135deg)}
+html body .service-migrations>summary:hover{background:#4b356d}
+
+/* Все переключатели TP (вкладки реестра, синхронизации, сервиса, справочников) —
+   как вкладки Сферы: подложка, белая выбранная вкладка, иконки без рамок.
+   Выбранную подсвечивает «бегунок» .pill-thumb — его цвета задаются переменными. */
+html body{--sel-fill:#fff;--sel-line:transparent;--sel-glow:0 1px 3px rgba(0,0,0,.08);--glow:transparent;--glow-soft:transparent}
+html body :is(.queue-switch,.doc-type-switch)>button:not(.zz):not(.zy){
+  min-height:36px!important;padding:0 14px 0 10px!important;border:0!important;border-radius:9px!important;
+  color:#5f6873!important;font-weight:600!important;box-shadow:none!important;
+}
+html body :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]:not(.zz):not(.zy){color:#1b2028!important;box-shadow:none!important;border:0!important}
+html body :is(.queue-switch,.doc-type-switch)>button>svg{border:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;filter:none!important;color:currentColor!important}
+html body :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]>svg{color:#5e4387!important}
+html body :is(.queue-switch,.doc-type-switch)>button:hover:not(:disabled):not([aria-pressed=true]){background:rgba(255,255,255,.5)!important;color:#1b2028!important}
+html body :is(.queue-switch,.doc-type-switch) .tab-count{background:rgba(0,0,0,.07)!important;color:inherit!important;border:0!important}
+html body :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true] .tab-count{background:#c4b9d7!important;color:#1b2028!important}
+html body .pill-thumb{border-radius:9px!important}
+/* Выбранная вкладка — белая сама по себе (бегунок TP рисуется не везде — прячем его). */
+html body .pill-thumb{display:none!important}
+html body :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]:not(.zz):not(.zy){background:#fff!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+html body .sync-panel .queue-switch.sync-tabs{background:#ebeae4!important;border-radius:12px!important;padding:4px!important;display:inline-flex!important;flex-wrap:wrap;gap:4px}
+html body :is(.reference-books,.sync-panel,.service-menu) .navy-head :is(.queue-switch,.doc-type-switch)>button[aria-pressed=true]:not(.zz):not(.zy){background:#fff!important;color:#1b2028!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
