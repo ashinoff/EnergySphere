@@ -111,6 +111,19 @@ export function Shell() {
   const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i =>
     (!i.perm || i.perm === view || can(i.perm)) && (view !== 'tp.view' || tpPageAvailable(i.id, tpAvailable) || i.id in TP_ROLE_INFO));
 
+  // Счётчики на пунктах меню (новые отметки монтёров и т.п.): раз в минуту
+  // и сразу по событию es-counts (после отправки/завершения).
+  const counted = useMemo(() => allowed.flatMap(m => m.menu.filter(i => i.count && (!i.perm || can(i.perm))).map(i => ({ key: `${m.id}/${i.id}`, count: i.count! }))), [allowed, can]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!counted.length) return;
+    const poll = () => counted.forEach(c => c.count().then(n => setCounts(prev => (prev[c.key] === n ? prev : { ...prev, [c.key]: n })), () => {}));
+    poll();
+    const timer = setInterval(poll, 60_000);
+    window.addEventListener('es-counts', poll);
+    return () => { clearInterval(timer); window.removeEventListener('es-counts', poll); };
+  }, [counted]);
+
   // Модули-фреймы (анализатор, акты ТП) создаются при первом открытии и дальше
   // не пересоздаются: загруженный файл и состояние переживают переходы по разделам.
   const framePage = effective.view === 'module' && isFramePage(effective.id, effective.page, tpAvailable) ? effective : null;
@@ -168,6 +181,7 @@ export function Shell() {
                       className={`side__item ${page === item.id ? 'is-active' : ''}`}
                       onClick={() => go({ view: 'module', id: m.id, page: item.id })}>
                       {item.icon}<span>{item.title}</span>
+                      {(counts[`${m.id}/${item.id}`] ?? 0) > 0 && <b className="side__count" aria-label="новых">{counts[`${m.id}/${item.id}`]}</b>}
                     </button>
                   ))}
                 </nav>

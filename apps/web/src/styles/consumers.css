@@ -1,0 +1,108 @@
+/* Модуль 02 «Поиск потребителя»: поиск, карточка, отметка монтёра, отметки
+   у инженера, реестры РЭС. Цвет — через --accent/--accent-strong модуля (синий).
+   Главные пользователи поиска — монтёры с телефона: всё в одну колонку на 900px. */
+
+/* ── Поиск ──────────────────────────────────────────────────────────── */
+.cs-search { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.cs-search .select { width: 220px; }
+.cs-search__field.search { width: min(460px, 100%); flex: 1 1 260px; }
+
+/* Номера (ПУ, ЛС) — чипы цвета модуля */
+.cs-chip {
+  display: inline-flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 7px;
+  font-size: 13px; font-weight: 700; letter-spacing: .01em; font-variant-numeric: tabular-nums;
+  color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 38%, #fff);
+}
+.cs-result__ids { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cs-result__res { font-size: 13px; color: var(--text-soft); }
+
+.cs-results { list-style: none; margin: 0; padding: 0; }
+.cs-results li + li { border-top: 1px solid var(--border); }
+.cs-result { display: grid; gap: 6px; width: 100%; padding: 16px 22px; border: 0; background: none; text-align: left; cursor: pointer; }
+.cs-result:hover { background: var(--surface-2); }
+.cs-result__title { font-size: 16px; font-weight: 650; }
+.cs-result__addr { font-size: 14px; color: var(--text-muted); }
+.cs-more { padding: 12px 22px; border-top: 1px solid var(--border); }
+
+/* ── Карточка потребителя ───────────────────────────────────────────── */
+.cs-card { display: grid; gap: 16px; }
+.cs-card > .btn { justify-self: start; }
+.card.cs-card .card + .card, .cs-card .card + .card { margin-top: 0; }
+.cs-card__head { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.cs-card__title { font-size: 22px; line-height: 1.25; }
+.cs-card__addr { color: var(--text-muted); }
+.cs-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 28px; margin: 0; }
+.cs-fields__row { display: grid; grid-template-columns: minmax(120px, 42%) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.cs-fields__row dt { color: var(--text-soft); }
+.cs-fields__row dd { margin: 0; font-weight: 550; overflow-wrap: anywhere; }
+
+.cs-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cs-history li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 14px; }
+.cs-history .badge { margin: 0; }
+.cs-link { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-strong); font-weight: 600; text-decoration: none; }
+.cs-link:hover { text-decoration: underline; }
+
+/* ── Отметка на месте ───────────────────────────────────────────────── */
+.cs-visit { display: grid; gap: 4px; }
+.cs-visit__step { display: grid; gap: 10px; justify-items: start; padding: 14px 0 18px; border-bottom: 1px solid var(--border); }
+.cs-visit__label { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cs-visit__label svg { color: var(--accent-strong); }
+.cs-visit__label b { font-size: 16px; }
+.cs-visit__label .muted { font-size: 13px; }
+.cs-visit__geo { font-size: 15px; }
+.cs-visit .field { margin-top: 14px; }
+.cs-visit__send { display: flex; justify-content: flex-end; margin-top: 14px; }
+
+.cs-thumbs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.cs-thumb { position: relative; width: 112px; display: grid; gap: 4px; }
+.cs-thumb img, .cs-thumb__file {
+  width: 112px; height: 112px; border-radius: 12px; object-fit: cover; background: var(--surface-2); border: 1px solid var(--border);
+}
+.cs-thumb__file { display: grid; place-content: center; justify-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--accent-strong); }
+/* Фото, которое браузер не показывает (HEIC не в Safari), — плитка с именем */
+.cs-thumb.is-raw img { visibility: hidden; }
+.cs-thumb.is-raw::before { content: 'ФОТО'; position: absolute; inset: 0 0 auto; height: 112px; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--accent-strong); }
+.cs-thumb__name { font-size: 12px; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-thumb .btn { position: absolute; top: 4px; right: 4px; width: 34px; height: 34px; min-height: 0; background: rgba(255, 255, 255, .9); }
+
+/* ── Отметки у инженера ─────────────────────────────────────────────── */
+.cs-visits { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; align-items: start; }
+.card.cs-visit-card { margin: 0; display: grid; gap: 10px; }
+.cs-visit-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.cs-visit-card__head .badge { margin: 0; flex: none; }
+.cs-visit-card__title { font-size: 18px; line-height: 1.3; }
+.cs-visit-card__facts { display: grid; gap: 6px; margin: 4px 0 0; font-size: 14px; }
+.cs-visit-card__facts > div { display: grid; grid-template-columns: 110px 1fr; gap: 10px; }
+.cs-visit-card__facts dt { color: var(--text-soft); }
+.cs-visit-card__facts dd { margin: 0; overflow-wrap: anywhere; }
+.cs-files { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.cs-file {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); font-size: 14px; font-weight: 600; color: var(--text);
+}
+.cs-file svg { color: var(--accent-strong); }
+.cs-file em { font-style: normal; font-weight: 500; font-size: 12px; color: var(--text-soft); }
+.cs-file:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, #fff); }
+.cs-file--psu { background: color-mix(in srgb, var(--accent) 28%, #fff); border-color: transparent; }
+.cs-visit-card__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--border); }
+
+/* ── Реестры РЭС ────────────────────────────────────────────────────── */
+.cs-registries { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; align-items: start; }
+.card.cs-registry { margin: 0; display: grid; gap: 10px; justify-items: start; }
+.cs-registry__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
+.cs-registry__head .badge { margin: 0; }
+.cs-registry__name { font-size: 20px; }
+.cs-registry__meta { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted); overflow-wrap: anywhere; }
+.cs-registry__check { display: grid; gap: 10px; width: 100%; padding: 14px 16px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 16%, #fff); }
+.cs-registry__cols { margin: 0; padding-left: 18px; font-size: 14px; color: var(--text-muted); display: grid; gap: 2px; }
+.cs-registry__actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .cs-search .select, .cs-search .btn { width: 100%; }
+  .cs-search__field.search { flex-basis: 100%; }
+  .cs-fields { grid-template-columns: 1fr; }
+  .cs-visits, .cs-registries { grid-template-columns: 1fr; }
+  .cs-visit__step > .btn, .cs-visit__send .btn { width: 100%; }
+  .cs-visit-card__facts > div { grid-template-columns: 96px 1fr; }
+  .cs-result { padding: 14px 16px; }
+}

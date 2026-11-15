@@ -48,9 +48,10 @@ export const PERMISSIONS = {
   // у раздела нет: проверить их было бы нечем.
   'analysis.view':            { group: 'analysis',  title: 'Открывать раздел (анализ идёт в браузере, данные не сохраняются)' },
   'consumers.view':           { group: 'consumers', title: 'Открывать раздел и искать по № ПУ / ЛС' },
-  'consumers.registry':       { group: 'consumers', title: 'Загружать расширенный реестр своего РЭС' },
-  'consumers.field':          { group: 'consumers', title: 'Прикладывать фото, ПСУ и геоточку' },
-  'consumers.complete':       { group: 'consumers', title: 'Скачивать вложения и отмечать «Выполнено»' },
+  'consumers.registry':       { group: 'consumers', title: 'Обновлять реестр потребителей своего РЭС' },
+  'consumers.field':          { group: 'consumers', title: 'Ставить геометку, прикладывать фото объекта и ПСУ' },
+  'consumers.inbox':          { group: 'consumers', title: 'Видеть отметки монтёров, скачивать фото и ПСУ' },
+  'consumers.complete':       { group: 'consumers', title: 'Завершать отметки монтёров' },
   'riru.view':                { group: 'riru',      title: 'Открывать раздел' },
   'riru.edit':                { group: 'riru',      title: 'Редактировать планы и технологию работ' },
   'riru.docs':                { group: 'riru',      title: 'Загружать нормативные документы' },
@@ -69,13 +70,16 @@ export const isPermission = (value: unknown): value is Permission => typeof valu
 // в том числе для ролей, добавленных позже. Дальше всё правится в админке.
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: PERMISSION_IDS,
-  nach_res: ['analysis.view', 'consumers.view', 'consumers.complete', 'riru.view', 'tp.view', 'tp.approve'],
-  nach_riru: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'riru.edit', 'tp.view', 'tp.approve'],
-  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.complete', 'riru.view', 'tp.view', 'tp.create'],
+  nach_res: ['analysis.view', 'consumers.view', 'riru.view', 'tp.view', 'tp.approve'],
+  // Поиск потребителя: монтёр отмечает на месте, инженер РИРУ (= инженер
+  // реализации) обновляет реестр своего РЭС и завершает отметки, начальник
+  // РИРУ и СУЭ — смотрят.
+  nach_riru: ['analysis.view', 'consumers.view', 'consumers.inbox', 'riru.view', 'riru.edit', 'tp.view', 'tp.approve'],
+  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.inbox', 'consumers.complete', 'riru.view', 'tp.view', 'tp.create'],
   eng_development: ['consumers.view', 'riru.view', 'tp.view', 'tp.create'],
   monter: ['consumers.view', 'consumers.field'],
-  nach_sue: ['analysis.view', 'consumers.view', 'riru.view', 'riru.docs', 'tp.view', 'tp.approve'],
-  eng_sue: ['analysis.view', 'consumers.view', 'riru.view', 'tp.view'],
+  nach_sue: ['analysis.view', 'consumers.view', 'consumers.inbox', 'riru.view', 'riru.docs', 'tp.view', 'tp.approve'],
+  eng_sue: ['analysis.view', 'consumers.view', 'consumers.inbox', 'riru.view', 'tp.view'],
   nach_stp: ['analysis.view', 'tp.view', 'tp.approve'],
   eng_stp: ['analysis.view', 'tp.view', 'tp.create'],
   glav_ing: ['analysis.view', 'tp.view', 'tp.approve'],

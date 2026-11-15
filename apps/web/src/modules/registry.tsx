@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import type { ModuleId, Permission } from '../../../api/src/core/access.js';
+import { newVisitsCount } from './consumers/api.js';
 import {
   IconBars, IconCheckCircle, IconCpu, IconPie, IconScale, IconSliders, IconBook, IconCalendar, IconCamera, IconClock, IconDocCheck, IconFolder,
-  IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget,
+  IconCheck, IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget,
   IconSettings, IconUpload, IconUser, IconUsers, IconWrench,
 } from '../ui/icons.js';
 
@@ -14,6 +15,9 @@ export interface MenuItem {
   perm?: Permission;
   // Что будет в разделе — показывается, пока раздел в разработке.
   about: string;
+  // Счётчик на пункте меню (например, новые отметки монтёров) — оболочка
+  // опрашивает его раз в минуту и по событию es-counts.
+  count?: () => Promise<number>;
 }
 
 export interface ModuleMeta {
@@ -52,10 +56,12 @@ export const MODULES: ModuleMeta[] = [
     id: 'consumers', num: '02', title: 'Поиск потребителя', subtitle: 'Карточка потребителя\nМонтёр ↔ инженер реализации',
     icon: <IconUser />, image: '/img/consumers.png', tint: '#b5c4dc', accent: '#a3b8d8', strong: '#34548a', view: 'consumers.view',
     menu: [
-      { id: 'search', title: 'Поиск', icon: <IconSearch />, about: 'Поиск по номеру ПУ или лицевому счёту — карточка потребителя.' },
-      { id: 'field', title: 'Мои выезды', icon: <IconCamera />, perm: 'consumers.field', about: 'Фото, ПСУ и геоточка по карточке — уходят инженеру своего РЭС.' },
-      { id: 'inbox', title: 'Входящие от монтёров', icon: <IconInbox />, perm: 'consumers.complete', about: 'Новые фото, ПСУ и геоточки: скачать и отметить «Выполнено».' },
-      { id: 'registry', title: 'Реестр РЭС', icon: <IconUpload />, perm: 'consumers.registry', about: 'Загрузка расширенного списка потребителей своего РЭС.' },
+      { id: 'search', title: 'Поиск', icon: <IconSearch />, about: 'Найдите потребителя по номеру ПУ или лицевому счёту — карточка со всеми данными реестра.' },
+      { id: 'field', title: 'Мои отметки', icon: <IconCamera />, perm: 'consumers.field', about: 'Что вы отправили инженеру РИРУ: геометки, фото объекта и ПСУ.' },
+      { id: 'inbox', title: 'Отметки монтёров', icon: <IconInbox />, perm: 'consumers.inbox', count: newVisitsCount,
+        about: 'Новые отметки с выезда: геометка, фото объекта и ПСУ в PDF — скачать и завершить.' },
+      { id: 'done', title: 'Завершённые', icon: <IconCheck />, perm: 'consumers.inbox', about: 'Завершённые отметки хранятся 3 дня, потом удаляются вместе с файлами.' },
+      { id: 'registry', title: 'Реестр РЭС', icon: <IconUpload />, perm: 'consumers.registry', about: 'Расширенный список потребителей своего РЭС: новая загрузка заменяет прежнюю целиком.' },
     ],
   },
   {

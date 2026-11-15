@@ -4,10 +4,20 @@ import { PlanPage } from './riru/PlanPage.js';
 import { TechCards } from './riru/TechCards.js';
 import { DocsPage } from './riru/DocsPage.js';
 import { TP_ROLE_INFO, TpRoleInfo } from './tp/TpRoleInfo.js';
+import { SearchPage } from './consumers/SearchPage.js';
+import { VisitsPage } from './consumers/VisitsPage.js';
+import { RegistryPage } from './consumers/RegistryPage.js';
 
 // Страница модуля по пункту меню. Модуль 01 (анализ) живёт во фрейме —
 // его показывает Shell (AnalysisHost). Ещё не сделанные модули — заглушка.
 export function ModulePage({ module, page }: { module: ModuleMeta; page: MenuItem }) {
+  if (module.id === 'consumers') {
+    if (page.id === 'search') return <SearchPage module={module} page={page} />;
+    if (page.id === 'field') return <VisitsPage key="mine" kind="mine" module={module} page={page} />;
+    if (page.id === 'inbox') return <VisitsPage key="new" kind="new" module={module} page={page} />;
+    if (page.id === 'done') return <VisitsPage key="done" kind="done" module={module} page={page} />;
+    if (page.id === 'registry') return <RegistryPage module={module} page={page} />;
+  }
   if (module.id === 'riru') {
     if (page.id === 'strategic' || page.id === 'tactical' || page.id === 'operational') {
       return <PlanPage key={page.id} kind={page.id} module={module} page={page} />;

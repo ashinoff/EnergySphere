@@ -7,5 +7,6 @@ import './styles/shell.css';
 import './styles/login.css';
 import './styles/admin.css';
 import './styles/riru.css';
+import './styles/consumers.css';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
