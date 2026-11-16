@@ -73,27 +73,75 @@ export function SearchPage({ module, page }: { module: ModuleMeta; page: MenuIte
           ? <Card><Empty title="Ничего не найдено" text="Проверьте номер. Можно ввести часть номера ПУ или лицевого счёта — от 3 знаков." /></Card>
           : (
             <Card className="card--flush">
-              <ul className="cs-results">
-                {found.items.map(f => (
-                  <li key={f.id}>
-                    <button type="button" className="cs-result" onClick={() => open(f.id)}>
+              {groups(found.items).map(g => (
+                <div key={g.key} className={`cs-block ${g.items.length > 1 ? 'cs-group' : ''}`}>
+                  {g.items.length > 1 && (
+                    <div className="cs-group__head">
                       <span className="cs-result__ids">
-                        {f.meter && <span className="cs-chip">ПУ {f.meter}</span>}
-                        {f.account && <span className="cs-chip">ЛС {f.account}</span>}
-                        {me.allRes && <span className="cs-result__res">{f.resName}</span>}
+                        <span className="cs-chip">ЛС {g.items[0].account}</span>
+                        <b>{g.items.length} {plural(g.items.length, 'точка учёта', 'точки учёта', 'точек учёта')}</b>
+                        {me.allRes && <span className="cs-result__res">{g.items[0].resName}</span>}
                       </span>
-                      <span className="cs-result__title">{f.title || 'Без наименования'}</span>
-                      {f.address && <span className="cs-result__addr">{f.address}</span>}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              {found.more && <p className="muted cs-more">Показаны первые 50 — уточните номер.</p>}
+                      <span className="cs-result__title">{g.items[0].title || 'Без наименования'}</span>
+                    </div>
+                  )}
+                  <ul className="cs-results">
+                    {g.items.map(f => (
+                      <li key={f.id}>
+                        <button type="button" className="cs-result" onClick={() => open(f.id)}>
+                          <span className="cs-result__ids">
+                            {f.meter ? <span className="cs-chip">ПУ {f.meter}</span> : <span className="cs-chip cs-chip--soft">без № ПУ</span>}
+                            {g.items.length === 1 && f.account && <span className="cs-chip">ЛС {f.account}</span>}
+                            {f.zones > 1 && <span className="cs-result__zones">{f.zones} {plural(f.zones, 'тарифная зона', 'тарифные зоны', 'тарифных зон')}</span>}
+                            {g.items.length === 1 && me.allRes && <span className="cs-result__res">{f.resName}</span>}
+                          </span>
+                          {g.items.length === 1 && <span className="cs-result__title">{f.title || 'Без наименования'}</span>}
+                          {f.address && <span className="cs-result__addr">{f.address}</span>}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              {found.more && <p className="muted cs-more">Показаны первые 100 — уточните номер.</p>}
             </Card>
           )
       )}
     </>
   );
+}
+
+const plural = (n: number, one: string, few: string, many: string) => {
+  const d = n % 10, h = n % 100;
+  return d === 1 && h !== 11 ? one : d >= 2 && d <= 4 && (h < 12 || h > 14) ? few : many;
+};
+
+// Результаты одного ЛС с разными ПУ (юрлицо: несколько точек учёта) — под общим
+// заголовком ЛС; остальные — по одному, в порядке выдачи.
+function groups(items: Found[]) {
+  const out: { key: string; items: Found[] }[] = [];
+  const byAccount = new Map<string, { key: string; items: Found[] }>();
+  for (const f of items) {
+    const key = f.account ? `${f.resId}/${f.account}` : `id${f.id}`;
+    const g = byAccount.get(key);
+    if (g) g.items.push(f);
+    else { const n = { key, items: [f] }; byAccount.set(key, n); out.push(n); }
+  }
+  return out;
+}
+
+// Тарифные зоны: поля, которые у зон различаются (код ТУ, зона суток, мощность…).
+// «№ п/п» — номер строки выгрузки, к потребителю отношения не имеет.
+const shortLabel = (l: string) => { const i = l.lastIndexOf(' · '); return i < 0 ? l : l.slice(i + 3); };
+const ROW_NUMBER = /^№\s*п\/п$/i;
+function zoneDiff(zones: [string, string][][]) {
+  const labels = [...new Set(zones.flatMap(z => z.map(([l]) => l)))];
+  const value = (z: [string, string][], l: string) => z.find(([x]) => x === l)?.[1] ?? '';
+  const differ = labels.filter(l => new Set(zones.map(z => value(z, l))).size > 1);
+  // Порядок зон — по «Дифференциации по зонам суток» (1, 2, 3), если она есть.
+  const zoneLabel = labels.find(l => /зонам суток/i.test(l));
+  const order = zoneLabel ? [...zones].sort((a, b) => (Number(value(a, zoneLabel)) || 99) - (Number(value(b, zoneLabel)) || 99)) : zones;
+  return { differ, shown: differ.filter(l => !ROW_NUMBER.test(shortLabel(l))), value, order };
 }
 
 // Поля по разделам шапки реестра: «Прибор учета · Номер счетчика» → раздел
@@ -126,7 +174,7 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
           <h2 className="cs-card__title">{card.title || 'Без наименования'}</h2>
           {card.address && <p className="cs-card__addr">{card.address}</p>}
         </div>
-        {sections(card.cells).map(sec => (
+        {sections(card.zones.length > 1 ? card.cells.filter(([l]) => !zoneDiff(card.zones).differ.includes(l)) : card.cells).map(sec => (
           <section key={sec.title} className="cs-section">
             {sec.title && <h3 className="cs-section__title">{sec.title}</h3>}
             <dl className="cs-fields">
@@ -137,6 +185,8 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
           </section>
         ))}
       </Card>
+
+      {card.zones.length > 1 && <ZonesCard zones={card.zones} />}
 
       {card.visits.length > 0 && (
         <Card title="Отметки по этому потребителю">
@@ -155,5 +205,25 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
 
       {canField && <VisitForm recordId={card.id} onSent={onSent} />}
     </div>
+  );
+}
+
+// Строки реестра одного ПУ — тарифные зоны: общее показано в карточке выше,
+// здесь — только то, чем зоны различаются.
+function ZonesCard({ zones }: { zones: [string, string][][] }) {
+  const { shown, value, order } = zoneDiff(zones);
+  return (
+    <Card title={`Тарифные зоны · ${zones.length}`} className="card--flush cs-zones">
+      <div className="cs-zones__scroll">
+        <table className="table">
+          <thead><tr><th>Поле</th>{order.map((_, i) => <th key={i}>Зона {i + 1}</th>)}</tr></thead>
+          <tbody>
+            {shown.map(l => (
+              <tr key={l}><td>{shortLabel(l)}</td>{order.map((z, i) => <td key={i}>{value(z, l) || '—'}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }

@@ -16,6 +16,13 @@
 .cs-result__ids { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .cs-result__res { font-size: 13px; color: var(--text-soft); }
 
+.cs-chip--soft { color: var(--text-soft); background: var(--surface-2); }
+.cs-result__zones { font-size: 13px; font-weight: 600; color: var(--accent-strong); }
+/* ЛС юрлица с несколькими точками учёта — общий заголовок и вложенный список */
+.cs-block + .cs-block { border-top: 1px solid var(--border); }
+.cs-group__head { display: grid; gap: 6px; padding: 16px 22px 12px; background: color-mix(in srgb, var(--accent) 14%, #fff); }
+.cs-group__head b { font-size: 14px; }
+.cs-group .cs-result { padding-left: 38px; }
 .cs-results { list-style: none; margin: 0; padding: 0; }
 .cs-results li + li { border-top: 1px solid var(--border); }
 .cs-result { display: grid; gap: 6px; width: 100%; padding: 16px 22px; border: 0; background: none; text-align: left; cursor: pointer; }
@@ -43,6 +50,11 @@
 .cs-history .badge { margin: 0; }
 .cs-link { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-strong); font-weight: 600; text-decoration: none; }
 .cs-link:hover { text-decoration: underline; }
+
+/* Тарифные зоны — таблица различий */
+.cs-zones__scroll { overflow-x: auto; }
+.cs-zones .card__head { padding: 20px 22px 12px; }
+.cs-zones .table td:first-child { color: var(--text-soft); }
 
 /* ── Отметка на месте ───────────────────────────────────────────────── */
 .cs-visit { display: grid; gap: 4px; }

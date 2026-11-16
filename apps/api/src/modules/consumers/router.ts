@@ -111,13 +111,17 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
     if (q.length < 3) throw new HttpError(400, 'Введите не меньше 3 знаков номера ПУ или ЛС.');
     const scope = scopeOf(user, req.query.res);
     const like = `%${q.replace(/[\\%_]/g, m => `\\${m}`)}%`;
+    // Строки одного ПУ и ЛС — тарифные зоны (день/ночь у физлиц): одна запись
+    // с числом зон. Разные ТУ одного ЛС (юрлица) остаются отдельными — у них свои ПУ.
     const { rows } = await db.query(
-      `SELECT c.id, c.res_id AS "resId", r.name AS "resName", c.meter, c.account, c.title, c.address
+      `SELECT min(c.id) AS id, c.res_id AS "resId", r.name AS "resName", c.meter, c.account,
+              min(c.title) AS title, min(c.address) AS address, count(*)::int AS zones
        FROM consumers.records c JOIN consumers.registries g ON g.res_id = c.res_id AND g.upload_id = c.upload_id
        JOIN core.res r ON r.id = c.res_id
        WHERE ($1::int[] IS NULL OR c.res_id = ANY($1)) AND (c.meter LIKE $2 OR c.account LIKE $2)
-       ORDER BY (c.meter = $3 OR c.account = $3) DESC, r.sort, c.meter, c.account LIMIT 51`, [scope, like, q]);
-    res.json({ items: rows.slice(0, 50), more: rows.length > 50 });
+       GROUP BY c.res_id, r.name, r.sort, c.meter, c.account, CASE WHEN c.meter = '' THEN c.id END
+       ORDER BY bool_or(c.meter = $3 OR c.account = $3) DESC, r.sort, c.account, c.meter LIMIT 101`, [scope, like, q]);
+    res.json({ items: rows.slice(0, 100), more: rows.length > 100 });
   }));
 
   app.get('/api/consumers/records/:id', view, route(async (req, res) => {
@@ -129,11 +133,17 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
     const found = rows[0];
     const record = found && { ...found, labels: undefined, cells: cardCells(found.labels, found.cells) };
     if (!record || !inScope(user, record.resId)) throw new HttpError(404, 'Потребитель не найден — возможно, реестр обновили. Повторите поиск.');
-    // Прошлые отметки по этому ПУ / ЛС (пока не удалены).
+    // Тарифные зоны: все строки этого ПУ с тем же ЛС (у счётчика без номера зон нет).
+    const zones = record.meter ? (await db.query<{ cells: unknown }>(
+      `SELECT c.cells FROM consumers.records c JOIN consumers.registries g ON g.res_id = c.res_id AND g.upload_id = c.upload_id
+       WHERE c.res_id = $1 AND c.meter = $2 AND c.account = $3 ORDER BY c.id`, [record.resId, record.meter, record.account])).rows
+      .map(z => cardCells(found.labels, z.cells)) : [record.cells];
+    // Прошлые отметки по этому ПУ (без номера ПУ — по ЛС): у юрлица на одном ЛС
+    // много ТУ, отметка по одной точке на другие не переносится.
     const visits = await db.query<VisitRow>(
-      `${VISIT_SELECT} WHERE v.res_id = $1 AND ((v.meter <> '' AND v.meter = $2) OR (v.account <> '' AND v.account = $3))
+      `${VISIT_SELECT} WHERE v.res_id = $1 AND (CASE WHEN $2 <> '' THEN v.meter = $2 ELSE v.meter = '' AND v.account = $3 END)
        ORDER BY v.created_at DESC LIMIT 10`, [record.resId, record.meter, record.account]);
-    res.json({ ...record, visits: visits.rows.map(visitOut) });
+    res.json({ ...record, zones: zones.length > 1 ? zones : [], visits: visits.rows.map(visitOut) });
   }));
 
   // ── Загрузка реестра: начать → части строк → завершить ──────────────

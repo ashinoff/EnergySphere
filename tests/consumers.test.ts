@@ -211,6 +211,25 @@ test('новый реестр целиком заменяет прежний с�
   assert.equal((await request(app).get('/api/consumers/search').query({ q: '777001' }).set(H.monter2)).body.items.length, 1);
 });
 
+test('тарифные зоны физлица — одна запись; ЛС юрлица — несколько точек учёта', async () => {
+  const zone = (meter: string, account: string, title: string, z: string) => ({ ...row(meter, account, title), values: [meter, account, title, z] });
+  assert.equal((await uploadRegistry('eng2', hosta, [
+    zone('555000111', '880001', 'Жилой дом', 'зона 1'), zone('555000111', '880001', 'Жилой дом', 'зона 2'),
+    row('700000001', '990001', 'ООО «Альфа»'), row('700000002', '990001', 'ООО «Альфа»'),
+  ])).status, 200);
+  const byMeter = await request(app).get('/api/consumers/search').query({ q: '555000111' }).set(H.monter2);
+  assert.equal(byMeter.body.items.length, 1);
+  assert.equal(byMeter.body.items[0].zones, 2);
+  const card = await request(app).get(`/api/consumers/records/${byMeter.body.items[0].id}`).set(H.monter2);
+  assert.equal(card.body.zones.length, 2);
+  assert.deepEqual(card.body.zones.map((z: [string, string][]) => z[3]), [['Адрес точки учета · Телефон', 'зона 1'], ['Адрес точки учета · Телефон', 'зона 2']]);
+
+  const byAccount = await request(app).get('/api/consumers/search').query({ q: '990001' }).set(H.monter2);
+  assert.deepEqual(byAccount.body.items.map((f: { meter: string; zones: number }) => [f.meter, f.zones]), [['700000001', 1], ['700000002', 1]]);
+  const one = await request(app).get(`/api/consumers/records/${byAccount.body.items[0].id}`).set(H.monter2);
+  assert.deepEqual(one.body.zones, []);
+});
+
 test('карточка: значения по порядку столбцов и строки прежнего вида (пары)', () => {
   assert.deepEqual(cardCells(['А', 'Б', 'В'], ['1', null, '3']), [['А', '1'], ['В', '3']]);
   assert.deepEqual(cardCells([], [['А', '1']]), [['А', '1']]);

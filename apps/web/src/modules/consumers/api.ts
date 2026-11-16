@@ -9,7 +9,8 @@ export interface ResInfo {
   registry: { fileName: string; rows: number; uploadedAt: string; uploadedBy: string | null } | null;
 }
 
-export interface Found { id: number; resId: number; resName: string; meter: string; account: string; title: string; address: string }
+// zones — сколько строк реестра у этого ПУ с тем же ЛС (тарифные зоны физлица).
+export interface Found { id: number; resId: number; resName: string; meter: string; account: string; title: string; address: string; zones: number }
 
 export interface VisitFile { id: number; kind: 'photo' | 'psu'; name: string; size: number }
 export interface Visit {
@@ -24,7 +25,8 @@ export interface Visit {
   files: VisitFile[];
 }
 
-export interface Card extends Found { cells: [string, string][]; visits: Visit[] }
+// zones — ячейки каждой тарифной зоны (пусто, если зона одна).
+export interface Card extends Omit<Found, 'zones'> { cells: [string, string][]; zones: [string, string][][]; visits: Visit[] }
 
 export const loadRes = () => api<ResInfo[]>('/api/consumers/res');
 
