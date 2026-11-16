@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && tsc -p tsconfig.api.json && vite build --config apps/web/vite.config.ts && vite build --config apps/tp-web/vite.config.ts",
     "start": "node dist/api/server.js",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
     "import:analyzer": "node scripts/import-analyzer.mjs",
     "import:tp": "node scripts/import-tp.mjs",
     "dev:tp-web": "vite --config apps/tp-web/vite.config.ts"

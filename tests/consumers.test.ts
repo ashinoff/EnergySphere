@@ -22,7 +22,7 @@ const { AccessService } = await import('../apps/api/src/core/access-service.js')
 const { createVerifier, createTokenClient } = await import('../apps/api/src/core/keycloak.js');
 const { migrate } = await import('../apps/api/src/migrate.js');
 const { createPool } = await import('../apps/api/src/db.js');
-const { cleanupConsumers } = await import('../apps/api/src/modules/consumers/router.js');
+const { cleanupConsumers, cardCells } = await import('../apps/api/src/modules/consumers/router.js');
 const { exifOrientation } = await import('../apps/api/src/modules/consumers/files.js');
 
 const dir = mkdtempSync(join(tmpdir(), 'es-pg-'));
@@ -83,14 +83,15 @@ after(async () => {
 });
 
 async function uploadRegistry(who: string, resId: number, rows: object[]) {
-  const start = await request(app).post(`/api/consumers/registry/${resId}/start`).set(H[who]).send({ fileName: 'Расширенный список.xls' });
+  const start = await request(app).post(`/api/consumers/registry/${resId}/start`).set(H[who]).send({ fileName: 'Расширенный список.xls', labels: LABELS });
   if (start.status !== 201) return start;
   const part = await request(app).post(`/api/consumers/registry/uploads/${start.body.uploadId}/rows`).set(H[who]).send({ rows });
   assert.equal(part.status, 200);
   return request(app).post(`/api/consumers/registry/uploads/${start.body.uploadId}/finish`).set(H[who]);
 }
+const LABELS = ['Прибор учета · Номер счетчика', 'ЛС / ЛС СТЕК', 'Наименование договора', 'Адрес точки учета · Телефон'];
 const row = (meter: string, account: string, title: string) =>
-  ({ meter, account, title, address: 'г. Сочи, ул. Ленина, 1', cells: [['Номер счетчика', meter], ['ЛС', account], ['Наименование договора', title]] });
+  ({ meter, account, title, address: 'г. Сочи, ул. Ленина, 1', values: [meter, account, title, null] });
 
 test('реестр обновляет только инженер РИРУ своего РЭС', async () => {
   assert.equal((await uploadRegistry('monter', adler, [row('1', '1', 'x')])).status, 403);
@@ -122,7 +123,9 @@ test('поиск по части номера ПУ или ЛС — только 
   const id = byMeter.body.items[0].id;
   const card = await request(app).get(`/api/consumers/records/${id}`).set(H.monter);
   assert.equal(card.body.title, 'Иванов И.И.');
-  assert.deepEqual(card.body.cells[2], ['Наименование договора', 'Иванов И.И.']);
+  // Карточка — пары [столбец, значение], пустые столбцы не показываются.
+  assert.deepEqual(card.body.cells, [['Прибор учета · Номер счетчика', '0112 3456 7890'], ['ЛС / ЛС СТЕК', '230001'], ['Наименование договора', 'Иванов И.И.']]);
+  assert.equal(card.body.labels, undefined);
   assert.equal((await request(app).get(`/api/consumers/records/${id}`).set(H.monter2)).status, 404);
 });
 
@@ -206,6 +209,12 @@ test('новый реестр целиком заменяет прежний с�
   assert.equal((await db.query('SELECT count(*)::int AS n FROM consumers.records WHERE res_id=$1', [adler])).rows[0].n, 1);
   // Хостинский не тронут.
   assert.equal((await request(app).get('/api/consumers/search').query({ q: '777001' }).set(H.monter2)).body.items.length, 1);
+});
+
+test('карточка: значения по порядку столбцов и строки прежнего вида (пары)', () => {
+  assert.deepEqual(cardCells(['А', 'Б', 'В'], ['1', null, '3']), [['А', '1'], ['В', '3']]);
+  assert.deepEqual(cardCells([], [['А', '1']]), [['А', '1']]);
+  assert.deepEqual(cardCells(['А'], null), []);
 });
 
 test('поворот снимка из EXIF читается', () => {

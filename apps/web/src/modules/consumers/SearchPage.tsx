@@ -96,6 +96,21 @@ export function SearchPage({ module, page }: { module: ModuleMeta; page: MenuIte
   );
 }
 
+// Поля по разделам шапки реестра: «Прибор учета · Номер счетчика» → раздел
+// «Прибор учета», поле «Номер счетчика». Порядок разделов — как в файле.
+function sections(cells: [string, string][]) {
+  const out: { title: string; rows: [string, string][] }[] = [];
+  for (const [label, value] of cells) {
+    const cut = label.lastIndexOf(' · ');
+    const title = cut > 0 ? label.slice(0, cut) : '';
+    const name = cut > 0 ? label.slice(cut + 3) : label;
+    let sec = out.find(x => x.title === title);
+    if (!sec) { sec = { title, rows: [] }; out.push(sec); }
+    sec.rows.push([name, value]);
+  }
+  return out;
+}
+
 function ConsumerCard({ card, multiple, onBack, onSent, canField }:
   { card: CardData; multiple: boolean; onBack: () => void; onSent: () => void; canField: boolean }) {
   return (
@@ -111,11 +126,16 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
           <h2 className="cs-card__title">{card.title || 'Без наименования'}</h2>
           {card.address && <p className="cs-card__addr">{card.address}</p>}
         </div>
-        <dl className="cs-fields">
-          {card.cells.map(([label, value], i) => (
-            <div key={i} className="cs-fields__row"><dt>{label}</dt><dd>{value}</dd></div>
-          ))}
-        </dl>
+        {sections(card.cells).map(sec => (
+          <section key={sec.title} className="cs-section">
+            {sec.title && <h3 className="cs-section__title">{sec.title}</h3>}
+            <dl className="cs-fields">
+              {sec.rows.map(([label, value], i) => (
+                <div key={i} className="cs-fields__row"><dt>{label}</dt><dd>{value}</dd></div>
+              ))}
+            </dl>
+          </section>
+        ))}
       </Card>
 
       {card.visits.length > 0 && (

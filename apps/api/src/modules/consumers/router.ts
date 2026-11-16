@@ -41,8 +41,17 @@ const rowSchema = z.object({
   account: z.string().max(200).default(''),
   title: z.string().max(500).default(''),
   address: z.string().max(1000).default(''),
-  cells: z.array(z.tuple([z.string().max(300), z.string().max(4000)])).max(300),
+  // Значения по порядку названий столбцов загрузки (null — пусто).
+  values: z.array(z.string().max(4000).nullable()).max(300),
 });
+const labelsSchema = z.array(z.string().max(300)).min(1).max(300);
+
+// Ячейки карточки: [столбец, значение] без пустых. Строки старого вида уже пары.
+export function cardCells(labels: string[], cells: unknown): [string, string][] {
+  if (!Array.isArray(cells)) return [];
+  if (cells.length && Array.isArray(cells[0])) return cells as [string, string][];
+  return (cells as (string | null)[]).flatMap((v, i) => (v === null || v === '' || !labels[i] ? [] : [[labels[i], v] as [string, string]]));
+}
 
 const visitDir = (id: number) => join(config.storagePath, 'consumers', String(id));
 const safeName = (s: string) => s.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'без номера';
@@ -114,10 +123,11 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
   app.get('/api/consumers/records/:id', view, route(async (req, res) => {
     const user = userOf(res);
     const { rows } = await db.query(
-      `SELECT c.id, c.res_id AS "resId", r.name AS "resName", c.meter, c.account, c.title, c.address, c.cells
+      `SELECT c.id, c.res_id AS "resId", r.name AS "resName", c.meter, c.account, c.title, c.address, c.cells, g.labels
        FROM consumers.records c JOIN consumers.registries g ON g.res_id = c.res_id AND g.upload_id = c.upload_id
        JOIN core.res r ON r.id = c.res_id WHERE c.id = $1`, [Number(req.params.id)]);
-    const record = rows[0];
+    const found = rows[0];
+    const record = found && { ...found, labels: undefined, cells: cardCells(found.labels, found.cells) };
     if (!record || !inScope(user, record.resId)) throw new HttpError(404, 'Потребитель не найден — возможно, реестр обновили. Повторите поиск.');
     // Прошлые отметки по этому ПУ / ЛС (пока не удалены).
     const visits = await db.query<VisitRow>(
@@ -137,11 +147,13 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
     if (!Number.isInteger(resId) || !inScope(user, resId)) throw new HttpError(403, 'Реестр этого РЭС обновляет его инженер РИРУ.');
     const fileName = z.string().trim().min(1).max(300).safeParse(req.body?.fileName);
     if (!fileName.success) throw new HttpError(400, 'Не указано имя файла.');
+    const labels = labelsSchema.safeParse(req.body?.labels);
+    if (!labels.success) throw new HttpError(400, 'Не пришли названия столбцов реестра — обновите страницу и загрузите файл заново.');
     const old = await db.query<{ id: string }>('DELETE FROM consumers.uploads WHERE res_id=$1 RETURNING id', [resId]);
     for (const { id } of old.rows) await db.query('DELETE FROM consumers.records WHERE upload_id=$1', [id]);
     const id = randomUUID();
-    await db.query('INSERT INTO consumers.uploads(id, res_id, file_name, created_by) VALUES ($1,$2,$3,$4)',
-      [id, resId, fileName.data, user.id || null]);
+    await db.query('INSERT INTO consumers.uploads(id, res_id, file_name, labels, created_by) VALUES ($1,$2,$3,$4,$5)',
+      [id, resId, fileName.data, JSON.stringify(labels.data), user.id || null]);
     res.status(201).json({ uploadId: id });
   }));
 
@@ -157,7 +169,7 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
     const upload = await ownUpload(req, res);
     const parsed = z.array(rowSchema).max(5000).safeParse(req.body?.rows);
     if (!parsed.success) throw new HttpError(400, 'Строки реестра пришли в неверном виде.');
-    const rows = parsed.data.map(r => ({ ...r, meter: searchKey(r.meter), account: searchKey(r.account) }));
+    const rows = parsed.data.map(({ values, ...r }) => ({ ...r, meter: searchKey(r.meter), account: searchKey(r.account), cells: values }));
     await db.query(
       `INSERT INTO consumers.records(res_id, upload_id, meter, account, title, address, cells)
        SELECT $1, $2, x.meter, x.account, x.title, x.address, x.cells
@@ -174,11 +186,11 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
     try {
       await client.query('BEGIN');
       await client.query(
-        `INSERT INTO consumers.registries(res_id, upload_id, file_name, rows, uploaded_at, uploaded_by)
-         VALUES ($1,$2,$3,$4,now(),$5)
+        `INSERT INTO consumers.registries(res_id, upload_id, file_name, rows, labels, uploaded_at, uploaded_by)
+         SELECT res_id, id, file_name, rows, labels, now(), $2 FROM consumers.uploads WHERE id = $1
          ON CONFLICT (res_id) DO UPDATE SET upload_id=EXCLUDED.upload_id, file_name=EXCLUDED.file_name,
-           rows=EXCLUDED.rows, uploaded_at=now(), uploaded_by=EXCLUDED.uploaded_by`,
-        [upload.res_id, upload.id, upload.file_name, upload.rows, userOf(res).id || null]);
+           rows=EXCLUDED.rows, labels=EXCLUDED.labels, uploaded_at=now(), uploaded_by=EXCLUDED.uploaded_by`,
+        [upload.id, userOf(res).id || null]);
       await client.query('DELETE FROM consumers.uploads WHERE id=$1', [upload.id]);
       await client.query('COMMIT');
     } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }

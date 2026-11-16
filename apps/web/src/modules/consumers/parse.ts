@@ -36,20 +36,23 @@ const ALIASES: Record<string, string[]> = {
   name: ['наименование договора', 'фио', 'абонент', 'наименование абонента', 'потребитель', 'наименование потребителя'],
   locality: ['населенный пункт', 'город', 'н.п.'], street: ['улица'], house: ['дом', 'номер дома'],
   building: ['корпус'], flat: ['квартира', 'кв.'], address: ['адрес', 'адрес точки учета', 'адрес объекта'],
+  // Наименование точки учёта («ЖИЛОЙ ДОМ») — подпись, если договор без наименования (у физлиц).
+  point: ['ту', 'точка учета', 'наименование ту', 'наименование точки учета', 'объект учета'],
 };
 const FIELD = new Map<string, string>();
 for (const [key, list] of Object.entries(ALIASES)) for (const a of list) if (!FIELD.has(a)) FIELD.set(a, key);
-const fieldKey = (label: string) => {
-  for (const part of norm(label).split(' · ').reverse()) { const k = FIELD.get(part); if (k) return k; }
-  return null;
-};
+// По собственному названию столбца, без раздела: в «Адрес точки учета · Регион»
+// столбец — регион, а не адрес (иначе адресом стал бы «Краснодарский край»).
+const fieldKey = (label: string) => FIELD.get(norm(label).split(' · ').pop() ?? '') ?? null;
 const headerScore = (row: string[]) => {
   const keys = new Set(row.map(fieldKey).filter(Boolean));
   return (keys.has('meter') ? 7 : 0) + (keys.has('account') ? 7 : 0) + Math.min(keys.size, 6);
 };
 
-export interface RegistryRow { meter: string; account: string; title: string; address: string; cells: [string, string][] }
-export interface ParsedRegistry { rows: RegistryRow[]; sheets: string[]; skipped: string[]; columns: { meter: string; account: string; name?: string; address?: string } }
+// Названия столбцов хранятся один раз (labels), в строке — значения по их порядку
+// (null — пусто): так реестр РЭС занимает в базе втрое меньше.
+export interface RegistryRow { meter: string; account: string; title: string; address: string; values: (string | null)[] }
+export interface ParsedRegistry { labels: string[]; rows: RegistryRow[]; sheets: string[]; skipped: string[]; columns: { meter: string; account: string; name?: string; address?: string } }
 
 // Значение ячейки как строка. Целые номера — без «1,23E+11» и без потери нулей формата.
 function cellText(cell: XlsxCell | undefined) {
@@ -109,6 +112,8 @@ export async function parseRegistry(file: File): Promise<ParsedRegistry> {
   try { book = X.read(await file.arrayBuffer(), { type: 'array', cellDates: false, cellNF: false, dense: false }); }
   catch { throw new Error('Файл не читается как Excel. Нужен расширенный список в формате XLS или XLSX.'); }
   const rows: RegistryRow[] = [];
+  const all: string[] = [];
+  const index = new Map<string, number>();
   const sheets: string[] = [];
   const skipped: string[] = [];
   let columns: ParsedRegistry['columns'] | null = null;
@@ -117,10 +122,18 @@ export async function parseRegistry(file: File): Promise<ParsedRegistry> {
     const found = layout(matrix, merges);
     if (!found || (found.map.meter === undefined && found.map.account === undefined)) { if (matrix.length) skipped.push(name); continue; }
     const { end, labels, map } = found;
+    const parts = ['locality', 'street', 'house'].filter(k => map[k] !== undefined).map(k => labels[map[k]].split(' · ').pop());
     columns ??= {
       meter: map.meter !== undefined ? labels[map.meter] : '—', account: map.account !== undefined ? labels[map.account] : '—',
-      name: map.name !== undefined ? labels[map.name] : undefined, address: map.address !== undefined ? labels[map.address] : undefined,
+      name: map.name !== undefined ? labels[map.name] : undefined,
+      address: map.address !== undefined ? labels[map.address] : parts.length ? parts.join(', ') : undefined,
     };
+    // Столбцы всех листов — в общий список (на разных листах набор может отличаться).
+    const slot = labels.map(l => {
+      const key = l.slice(0, 300);
+      if (!index.has(key)) { index.set(key, all.length); all.push(key); }
+      return index.get(key)!;
+    });
     const at = (row: string[], key: string) => (map[key] !== undefined ? row[map[key]] ?? '' : '');
     let count = 0;
     for (const row of matrix.slice(end + 1)) {
@@ -129,15 +142,17 @@ export async function parseRegistry(file: File): Promise<ParsedRegistry> {
       if (!meter && !account) continue;
       const address = at(row, 'address') || [at(row, 'locality'), at(row, 'street'), at(row, 'house') && `д. ${at(row, 'house')}`,
         at(row, 'building') && `корп. ${at(row, 'building')}`, at(row, 'flat') && `кв. ${at(row, 'flat')}`].filter(Boolean).join(', ');
-      const cells: [string, string][] = [];
-      labels.forEach((l, c) => { if (row[c]) cells.push([l.slice(0, 300), row[c].slice(0, 4000)]); });
-      rows.push({ meter: meter.slice(0, 200), account: account.slice(0, 200), title: at(row, 'name').slice(0, 500), address: address.slice(0, 1000), cells });
+      const values: (string | null)[] = [];
+      labels.forEach((_, c) => { if (row[c]) values[slot[c]] = row[c].slice(0, 4000); });
+      for (let i = 0; i < values.length; i++) values[i] ??= null;
+      const title = at(row, 'name') || at(row, 'point');
+      rows.push({ meter: meter.slice(0, 200), account: account.slice(0, 200), title: title.slice(0, 500), address: address.slice(0, 1000), values });
       count++;
     }
     if (count) sheets.push(name); else skipped.push(name);
   }
   if (!rows.length || !columns) throw new Error('Не найдена шапка с номером ПУ или лицевым счётом. Проверьте, что выбран реестр абонентов (расширенный список).');
-  return { rows, sheets, skipped, columns };
+  return { labels: all, rows, sheets, skipped, columns };
 }
 
 // Строки — частями до ~700 КБ (ограничение запроса на сервере — 1 МБ).

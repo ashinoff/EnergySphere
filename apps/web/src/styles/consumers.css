@@ -31,6 +31,8 @@
 .cs-card__head { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 .cs-card__title { font-size: 22px; line-height: 1.25; }
 .cs-card__addr { color: var(--text-muted); }
+.cs-section + .cs-section { margin-top: 18px; }
+.cs-section__title { margin-bottom: 2px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-strong); }
 .cs-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 28px; margin: 0; }
 .cs-fields__row { display: grid; grid-template-columns: minmax(120px, 42%) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
 .cs-fields__row dt { color: var(--text-soft); }

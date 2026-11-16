@@ -52,7 +52,7 @@ function ResRegistry({ res, canUpload, onDone }: { res: ResInfo; canUpload: bool
   const send = async (file: File, parsed: ParsedRegistry) => {
     setStep({ phase: 'sending', done: 0, total: parsed.rows.length });
     try {
-      const { uploadId } = await api<{ uploadId: string }>(`/api/consumers/registry/${res.id}/start`, { method: 'POST', json: { fileName: file.name } });
+      const { uploadId } = await api<{ uploadId: string }>(`/api/consumers/registry/${res.id}/start`, { method: 'POST', json: { fileName: file.name, labels: parsed.labels } });
       let done = 0;
       for (const part of chunks(parsed.rows)) {
         await api(`/api/consumers/registry/uploads/${uploadId}/rows`, { method: 'POST', json: { rows: part } });
