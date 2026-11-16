@@ -262,3 +262,38 @@ test('поворот снимка из EXIF читается', () => {
   assert.equal(exifOrientation(Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe1]), len, app1, Buffer.from([0xff, 0xd9])])), 6);
   assert.equal(exifOrientation(photo()), 1);
 });
+
+test('дом по адресу реестра: без квартиры, «д.» не уходит в запрос, точное совпадение — отдельно', async () => {
+  const { houseAddress, createGeocoder } = await import('../apps/api/src/modules/consumers/geocoder.js');
+  assert.deepEqual(houseAddress('Сочи, ул. Ленина, д. 5, корп. 2, кв. 7'),
+    { query: 'Сочи, ул. Ленина, 5, корп. 2', parts: { locality: 'Сочи', street: 'ул. Ленина', house: '52' } });
+  assert.equal(houseAddress('пгт Дагомыс, ул Батумское шоссе, д 21А, кв 3').query, 'пгт Дагомыс, ул Батумское шоссе, 21А');
+
+  const asked: string[] = [];
+  const feature = (city: string, street: string, house: string, lon: number) =>
+    ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lon, 43.6] }, properties: { countrycode: 'RU', city, street, housenumber: house } });
+  const geocoder = createGeocoder({
+    intervalMs: 0,
+    fetcher: async url => {
+      asked.push(new URL(String(url)).searchParams.get('q')!);
+      return new Response(JSON.stringify({ features: [
+        feature('Дагомыс', 'улица Ленина', '5', 39.1), feature('Сочи', 'улица Ленина', '5', 39.7), feature('Сочи', 'улица Ленина', '5', 39.7),
+      ] }));
+    },
+  });
+  const one = await geocoder.lookup('Сочи, ул. Ленина, д. 5, кв. 12');
+  assert.deepEqual(asked, ['Сочи, Ленина, 5']);
+  assert.equal(one.places.length, 2); // одинаковые точки — одной строкой
+  assert.deepEqual(one.places.map(p => [p.city, p.exact]), [['Сочи', true], ['Дагомыс', false]]);
+  await geocoder.lookup('Сочи, ул. Ленина, д. 5, кв. 40'); // тот же дом — из кеша
+  assert.equal(asked.length, 1);
+  await assert.rejects(geocoder.lookup(''), /нет адреса/);
+
+  // Дома в OSM нет — предлагаем улицу, потом посёлок (карта откроется рядом).
+  const rural = createGeocoder({ intervalMs: 0, fetcher: async url => {
+    const q = new URL(String(url)).searchParams.get('q');
+    return new Response(JSON.stringify({ features: q === 'Волковка' ? [feature('Волковка', '', '', 39.6)] : [] }));
+  } });
+  const far = await rural.lookup('с. Волковка, ул. Садовая, д. 1');
+  assert.deepEqual(far.places.map(p => [p.city, p.level, p.exact]), [['Волковка', 'place', false]]);
+});

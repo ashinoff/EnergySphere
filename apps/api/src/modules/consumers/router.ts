@@ -11,6 +11,7 @@ import { HttpError, type Db } from '../../db.js';
 import { requirePermission, route, userOf } from '../../core/http.js';
 import type { UserContext } from '../../core/access-service.js';
 import { psuPdf, toViewable } from './files.js';
+import { createGeocoder } from './geocoder.js';
 
 // Модуль 02 «Поиск потребителя». У каждого РЭС свой реестр (расширенный список,
 // как в Web_abonent): его обновляет инженер РИРУ своего РЭС. Монтёр находит
@@ -157,6 +158,19 @@ export function mountConsumers(app: Express, { db }: { db: Db }) {
       `${VISIT_SELECT} WHERE v.res_id = $1 AND (CASE WHEN $2 <> '' THEN v.meter = $2 ELSE v.meter = '' AND v.account = $3 END)
        ORDER BY v.created_at DESC LIMIT 10`, [record.resId, record.meter, record.account]);
     res.json({ ...record, zones: zones.length > 1 ? zones : [], visits: visits.rows.map(visitOut) });
+  }));
+
+  // Дом потребителя на карте по адресу реестра — когда телефон или платформа
+  // не дают геолокацию. Точное совпадение монтёр видит сразу, похожие (та же
+  // улица в другом посёлке) — списком на выбор.
+  const geocoder = createGeocoder();
+  app.get('/api/consumers/records/:id/places', requirePermission('consumers.field'), route(async (req, res) => {
+    const user = userOf(res);
+    const { rows } = await db.query<{ res_id: number; address: string }>(
+      `SELECT c.res_id, c.address FROM consumers.records c
+       JOIN consumers.registries g ON g.res_id = c.res_id AND g.upload_id = c.upload_id WHERE c.id = $1`, [Number(req.params.id)]);
+    if (!rows[0] || !inScope(user, rows[0].res_id)) throw new HttpError(404, 'Потребитель не найден — повторите поиск.');
+    res.json(await geocoder.lookup(rows[0].address));
   }));
 
   // ── Загрузка реестра: начать → части строк → завершить ──────────────

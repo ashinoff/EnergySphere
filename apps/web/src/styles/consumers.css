@@ -68,6 +68,17 @@
 /* Карта для геометки вручную (Leaflet) */
 .cs-map { justify-self: stretch; height: 340px; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; z-index: 0; }
 .cs-map__hint { font-size: 13px; }
+/* Дома, найденные по адресу реестра: выбрать нужный */
+.cs-places { display: grid; gap: 8px; justify-self: stretch; }
+.cs-places > .muted { font-size: 13px; }
+.cs-place {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border-radius: 10px; cursor: pointer; text-align: left;
+  border: 1px solid var(--border); background: var(--surface-2); font-size: 14px; font-weight: 600; color: var(--text);
+}
+.cs-place svg { flex: none; color: var(--accent-strong); }
+.cs-place em { margin-left: auto; font-style: normal; font-size: 12px; font-weight: 700; color: var(--accent-strong); }
+.cs-place:hover { border-color: var(--accent); }
+.cs-place.is-on { border-color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 28%, #fff); }
 .cs-map__pin span {
   display: block; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
   background: var(--accent-strong); border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
