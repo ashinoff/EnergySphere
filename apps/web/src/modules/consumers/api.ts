@@ -31,7 +31,7 @@ export interface Card extends Omit<Found, 'zones'> { cells: [string, string][]; 
 export const loadRes = () => api<ResInfo[]>('/api/consumers/res');
 
 // Счётчик на пункте меню «Отметки монтёров».
-export const newVisitsCount = () => loadRes().then(list => list.reduce((sum, r) => sum + r.newVisits, 0));
+export const newVisitsCount = () => api<{ count: number }>('/api/consumers/new-count').then(r => r.count);
 // Пересчитать счётчики меню сразу (после отправки или завершения отметки).
 export const refreshCounts = () => window.dispatchEvent(new Event('es-counts'));
 

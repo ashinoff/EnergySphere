@@ -88,8 +88,21 @@ export async function cleanupConsumers(db: Db) {
   return rows.length;
 }
 
+// Новые отметки монтёров, которые ждут этого человека (право inbox, свой РЭС).
+export async function consumersBadge(db: Db, user: UserContext) {
+  if (!user.permissions.has('consumers.inbox')) return 0;
+  const { rows } = await db.query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM consumers.visits WHERE status = 'new' AND ($1::int[] IS NULL OR res_id = ANY($1))`, [user.resScope]);
+  return rows[0].n;
+}
+
 export function mountConsumers(app: Express, { db }: { db: Db }) {
   const view = requirePermission('consumers.view');
+
+  // Счётчик на пункте меню «Отметки монтёров» — оболочка опрашивает часто.
+  app.get('/api/consumers/new-count', route(async (_req, res) => {
+    res.json({ count: await consumersBadge(db, userOf(res)) });
+  }));
 
   // ── РЭС и их реестры ────────────────────────────────────────────────
   app.get('/api/consumers/res', view, route(async (_req, res) => {

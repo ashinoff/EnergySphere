@@ -30,10 +30,10 @@ export function VisitsPage({ module, page, kind }: { module: ModuleMeta; page: M
   }, [kind, res, toast]);
   useEffect(load, [load]);
   useEffect(() => { if (me.allRes && kind !== 'mine') loadRes().then(setResList).catch(() => {}); }, [me.allRes, kind]);
-  // Новые отметки приходят сами — обновляем список раз в минуту.
+  // Новые отметки приходят сами — обновляем список каждые 15 с (пока вкладка видна).
   useEffect(() => {
     if (kind !== 'new') return;
-    const timer = setInterval(load, 60_000);
+    const timer = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 15_000);
     return () => clearInterval(timer);
   }, [kind, load]);
 

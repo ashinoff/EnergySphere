@@ -1,6 +1,7 @@
 import type { Express } from 'express';
 import type { Db } from '../db.js';
-import { mountConsumers } from './consumers/router.js';
+import { route, userOf } from '../core/http.js';
+import { consumersBadge, mountConsumers } from './consumers/router.js';
 import { mountRiru } from './riru/router.js';
 
 // Реестр модулей. Каждый модуль — своя папка modules/<id>/ со своим роутером
@@ -10,4 +11,10 @@ import { mountRiru } from './riru/router.js';
 export function mountModules(app: Express, deps: { db: Db }) {
   mountConsumers(app, deps);
   mountRiru(app, deps);
+
+  // Красный счётчик на плитке Сферы в платформе (SUE_system опрашивает его с
+  // токеном платформы): сумма того, что ждёт действия человека, по модулям.
+  app.get('/api/platform/badge', route(async (_req, res) => {
+    res.json({ count: await consumersBadge(deps.db, userOf(res)) });
+  }));
 }

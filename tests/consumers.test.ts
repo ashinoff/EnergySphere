@@ -24,6 +24,7 @@ const { migrate } = await import('../apps/api/src/migrate.js');
 const { createPool } = await import('../apps/api/src/db.js');
 const { cleanupConsumers, cardCells } = await import('../apps/api/src/modules/consumers/router.js');
 const { exifOrientation } = await import('../apps/api/src/modules/consumers/files.js');
+const { config } = await import('../apps/api/src/config.js');
 
 const dir = mkdtempSync(join(tmpdir(), 'es-pg-'));
 const port = 54000 + Math.floor(Math.random() * 400);
@@ -182,6 +183,23 @@ test('монтёр: геометка, фото объекта и ПСУ (фот�
   assert.equal((await request(app).get('/api/consumers/visits').query({ status: 'mine' }).set(H.monter)).body.length, 1);
   // В карточке потребителя видна прошлая отметка.
   assert.equal((await request(app).get(`/api/consumers/records/${id}`).set(H.monter)).body.visits.length, 1);
+});
+
+test('счётчик новых отметок: меню модуля и плитка платформы (CORS с её домена)', async () => {
+  const badge = async (who: string) => (await request(app).get('/api/platform/badge').set(H[who])).body.count;
+  assert.equal(await badge('eng'), 1);
+  assert.equal(await badge('chief'), 1);
+  assert.equal(await badge('sue'), 1);
+  assert.equal(await badge('eng2'), 0);
+  assert.equal(await badge('monter'), 0);
+  assert.equal((await request(app).get('/api/consumers/new-count').set(H.eng)).body.count, 1);
+  assert.equal((await request(app).get('/api/platform/badge')).status, 401);
+  const pre = await request(app).options('/api/platform/badge').set('Origin', config.platformOrigin)
+    .set('Access-Control-Request-Method', 'GET').set('Access-Control-Request-Headers', 'authorization');
+  assert.equal(pre.status, 204);
+  assert.equal(pre.headers['access-control-allow-origin'], config.platformOrigin);
+  const other = await request(app).get('/api/platform/badge').set('Origin', 'https://evil.example').set(H.eng);
+  assert.equal(other.headers['access-control-allow-origin'], config.platformOrigin); // чужому домену браузер ответ не отдаст
 });
 
 test('«Завершить» — только инженер РИРУ; завершённые удаляются через 3 дня вместе с файлами', async () => {

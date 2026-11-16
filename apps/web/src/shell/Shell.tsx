@@ -111,17 +111,20 @@ export function Shell() {
   const visibleMenu = (items: MenuItem[], view?: string) => items.filter(i =>
     (!i.perm || i.perm === view || can(i.perm)) && (view !== 'tp.view' || tpPageAvailable(i.id, tpAvailable) || i.id in TP_ROLE_INFO));
 
-  // Счётчики на пунктах меню (новые отметки монтёров и т.п.): раз в минуту
-  // и сразу по событию es-counts (после отправки/завершения).
+  // Счётчики на пунктах меню (новые отметки монтёров и т.п.): каждые 15 с,
+  // при возврате на вкладку и сразу по событию es-counts (после отправки/завершения).
+  // Запрос — один count в базе, частый опрос дёшев.
   const counted = useMemo(() => allowed.flatMap(m => m.menu.filter(i => i.count && (!i.perm || can(i.perm))).map(i => ({ key: `${m.id}/${i.id}`, count: i.count! }))), [allowed, can]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     if (!counted.length) return;
     const poll = () => counted.forEach(c => c.count().then(n => setCounts(prev => (prev[c.key] === n ? prev : { ...prev, [c.key]: n })), () => {}));
     poll();
-    const timer = setInterval(poll, 60_000);
+    const timer = setInterval(() => { if (document.visibilityState === 'visible') poll(); }, 15_000);
+    const onShow = () => { if (document.visibilityState === 'visible') poll(); };
     window.addEventListener('es-counts', poll);
-    return () => { clearInterval(timer); window.removeEventListener('es-counts', poll); };
+    document.addEventListener('visibilitychange', onShow);
+    return () => { clearInterval(timer); window.removeEventListener('es-counts', poll); document.removeEventListener('visibilitychange', onShow); };
   }, [counted]);
 
   // Модули-фреймы (анализатор, акты ТП) создаются при первом открытии и дальше

@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import compression from 'compression';
+import cors from 'cors';
 import helmet from 'helmet';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -82,6 +83,9 @@ export function createApp({ db, tpDb, verify, tokens, access }: AppDeps) {
     if (body.success) await tokens.logout(body.data.refreshToken);
     res.json({ ok: true });
   }));
+
+  // Счётчик для плитки платформы запрашивается с её домена (fetch с токеном).
+  app.use('/api/platform/badge', cors({ origin: config.platformOrigin, methods: ['GET'], allowedHeaders: ['Authorization'], maxAge: 600 }));
 
   // ── Всё остальное под /api — только с токеном ────────────────────────
   app.use('/api', (req, res, next) => {
