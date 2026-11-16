@@ -64,6 +64,14 @@
 .cs-visit__label b { font-size: 16px; }
 .cs-visit__label .muted { font-size: 13px; }
 .cs-visit__geo { font-size: 15px; }
+.cs-visit__geo-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Карта для геометки вручную (Leaflet) */
+.cs-map { justify-self: stretch; height: 340px; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; z-index: 0; }
+.cs-map__hint { font-size: 13px; }
+.cs-map__pin span {
+  display: block; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  background: var(--accent-strong); border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
 .cs-visit .field { margin-top: 14px; }
 .cs-visit__send { display: flex; justify-content: flex-end; margin-top: 14px; }
 
@@ -116,7 +124,8 @@
   .cs-search__field.search { flex-basis: 100%; }
   .cs-fields { grid-template-columns: 1fr; }
   .cs-visits, .cs-registries { grid-template-columns: 1fr; }
-  .cs-visit__step > .btn, .cs-visit__send .btn { width: 100%; }
+  .cs-visit__step > .btn, .cs-visit__send .btn, .cs-visit__geo-actions .btn { flex: 1 1 100%; width: 100%; }
+  .cs-map { height: 300px; }
   .cs-visit-card__facts > div { grid-template-columns: 96px 1fr; }
   .cs-result { padding: 14px 16px; }
 }

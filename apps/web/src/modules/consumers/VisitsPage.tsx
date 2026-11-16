@@ -93,7 +93,7 @@ function VisitCard({ v, kind, showRes, onComplete }: { v: Visit; kind: Kind; sho
 
       <dl className="cs-visit-card__facts">
         <div><dt>Геометка</dt><dd>{v.geo
-          ? <a className="cs-link" href={mapUrl(v.geo)} target="_blank" rel="noreferrer"><IconMap size={16} />{v.geo.lat}, {v.geo.lon}{v.geo.accuracy ? ` · ±${v.geo.accuracy} м` : ''}</a>
+          ? <a className="cs-link" href={mapUrl(v.geo)} target="_blank" rel="noreferrer"><IconMap size={16} />{v.geo.lat}, {v.geo.lon}{v.geo.accuracy !== null ? ` · ±${v.geo.accuracy} м` : ' · на карте'}</a>
           : <span className="muted">не ставили</span>}</dd></div>
         <div><dt>Отправил</dt><dd>{v.author ?? 'монтёр'} · {fmtTime(v.createdAt)}</dd></div>
         {v.doneAt && <div><dt>Завершил</dt><dd>{v.doneBy ?? '—'} · {fmtTime(v.doneAt)}</dd></div>}

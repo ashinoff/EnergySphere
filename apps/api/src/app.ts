@@ -47,7 +47,8 @@ export function createApp({ db, tpDb, verify, tokens, access }: AppDeps) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'blob:'],
+        // подложка карты геометки (модуль 02)
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://tile.openstreetmap.org'],
         styleSrc: ["'self'", "'unsafe-inline'"],
         connectSrc: ["'self'"],
         frameAncestors: ["'self'", config.platformOrigin],

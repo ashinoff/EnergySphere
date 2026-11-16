@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../auth/session.js';
 import { Button, Card, Field, TextArea, useToast } from '../../ui/kit.js';
-import { IconCamera, IconCheck, IconDoc, IconMap, IconTrash, IconUpload } from '../../ui/icons.js';
+import { IconCamera, IconCheck, IconDoc, IconMap, IconTarget, IconTrash, IconUpload } from '../../ui/icons.js';
 import { mapUrl, refreshCounts } from './api.js';
+import { MapPicker } from './MapPicker.js';
+import { shrink } from './shrink.js';
 
 // Отметка монтёра на месте: геометка, фото объекта, ПСУ (фото или PDF).
 // Всё уходит одним запросом инженерам РИРУ своего РЭС.
-type Geo = { lat: number; lon: number; accuracy: number };
+// Геометка — по телефону («Моё место») или нажатием на карте: геолокацию может не
+// дать браузер, телефон или платформа (фрейм), карта работает всегда.
+// accuracy: null — место указано на карте вручную.
+type Geo = { lat: number; lon: number; accuracy: number | null };
+const inFrame = window.parent !== window;
 interface Picked { file: File; url: string }
 
 const MAX = 10;
@@ -16,6 +22,8 @@ export function VisitForm({ recordId, onSent }: { recordId: number; onSent: () =
   const toast = useToast();
   const [geo, setGeo] = useState<Geo | null>(null);
   const [locating, setLocating] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [stage, setStage] = useState('');
   const [photos, setPhotos] = useState<Picked[]>([]);
   const [psu, setPsu] = useState<Picked[]>([]);
   const [comment, setComment] = useState('');
@@ -29,14 +37,16 @@ export function VisitForm({ recordId, onSent }: { recordId: number; onSent: () =
   useEffect(() => () => all.current.forEach(p => URL.revokeObjectURL(p.url)), []);
 
   const locate = () => {
-    if (!navigator.geolocation) { toast('Телефон не даёт координаты — включите геолокацию', 'error'); return; }
+    if (!navigator.geolocation) { setShowMap(true); toast('Телефон не даёт координаты — укажите место на карте', 'error'); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       p => { setGeo({ lat: +p.coords.latitude.toFixed(6), lon: +p.coords.longitude.toFixed(6), accuracy: Math.round(p.coords.accuracy) }); setLocating(false); },
       e => {
         setLocating(false);
-        toast(e.code === e.PERMISSION_DENIED ? 'Нет доступа к геолокации — разрешите его браузеру в настройках телефона'
-          : 'Не удалось определить место — выйдите на открытое место и повторите', 'error');
+        setShowMap(true);
+        toast(e.code !== e.PERMISSION_DENIED ? 'Не удалось определить место — нажмите на дом на карте'
+          : inFrame ? 'Платформа не передала геолокацию — нажмите на дом на карте'
+            : 'Геолокация запрещена в браузере — нажмите на дом на карте (или разрешите её в настройках сайта)', 'error');
       },
       { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
     );
@@ -56,20 +66,27 @@ export function VisitForm({ recordId, onSent }: { recordId: number; onSent: () =
     if (!geo && !photos.length && !psu.length) { toast('Поставьте геометку или приложите фото объекта / ПСУ', 'error'); return; }
     const form = new FormData();
     form.set('recordId', String(recordId));
-    if (geo) { form.set('lat', String(geo.lat)); form.set('lon', String(geo.lon)); form.set('accuracy', String(geo.accuracy)); }
+    if (geo) {
+      form.set('lat', String(geo.lat)); form.set('lon', String(geo.lon));
+      if (geo.accuracy !== null) form.set('accuracy', String(geo.accuracy));
+    }
     if (comment.trim()) form.set('comment', comment.trim());
-    photos.forEach(p => form.append('photo', p.file, p.file.name));
-    psu.forEach(p => form.append('psu', p.file, p.file.name));
     setBusy(true);
     try {
+      // Фото уменьшаем на телефоне: отправка и скачивание у инженера — в разы быстрее.
+      setStage('Сжимаем фото…');
+      for (const f of await Promise.all(photos.map(p => shrink(p.file, 'photo')))) form.append('photo', f, f.name);
+      for (const f of await Promise.all(psu.map(p => shrink(p.file, 'psu')))) form.append('psu', f, f.name);
+      setStage('Отправляем…');
       await api('/api/consumers/visits', { method: 'POST', body: form });
       toast('Отправлено инженеру РИРУ');
       [...photos, ...psu].forEach(p => URL.revokeObjectURL(p.url));
-      setGeo(null); setPhotos([]); setPsu([]); setComment('');
+      setGeo(null); setShowMap(false); setPhotos([]); setPsu([]); setComment('');
       refreshCounts();
       onSent();
-    } catch (e) { toast((e as Error).message, 'error'); } finally { setBusy(false); }
+    } catch (e) { toast((e as Error).message, 'error'); } finally { setBusy(false); setStage(''); }
   };
+  const pickOnMap = (lat: number, lon: number) => setGeo({ lat, lon, accuracy: null });
 
   return (
     <Card title="Отметка на месте" className="cs-visit">
@@ -78,10 +95,19 @@ export function VisitForm({ recordId, onSent }: { recordId: number; onSent: () =
         {geo ? (
           <p className="cs-visit__geo">
             <a className="cs-link" href={mapUrl(geo)} target="_blank" rel="noreferrer">{geo.lat}, {geo.lon}</a>
-            <span className="muted"> · точность ±{geo.accuracy} м</span>
+            <span className="muted"> · {geo.accuracy === null ? 'указано на карте' : `точность ±${geo.accuracy} м`}</span>
           </p>
-        ) : <p className="muted">Встаньте у объекта и нажмите кнопку — телефон определит координаты.</p>}
-        <Button icon={<IconMap size={18} />} onClick={locate} disabled={locating}>{locating ? 'Определяем…' : geo ? 'Обновить геометку' : 'Поставить геометку'}</Button>
+        ) : <p className="muted">Встаньте у объекта и нажмите «Моё место» — или укажите дом на карте.</p>}
+        <div className="cs-visit__geo-actions">
+          <Button icon={<IconTarget size={18} />} onClick={locate} disabled={locating}>{locating ? 'Определяем…' : 'Моё место'}</Button>
+          <Button variant="ghost" icon={<IconMap size={18} />} onClick={() => setShowMap(v => !v)}>{showMap ? 'Скрыть карту' : 'Указать на карте'}</Button>
+        </div>
+        {showMap && (
+          <>
+            <MapPicker value={geo} onPick={pickOnMap} />
+            <p className="muted cs-map__hint">Нажмите на дом потребителя — метку можно перетащить.</p>
+          </>
+        )}
       </div>
 
       <div className="cs-visit__step">
@@ -103,7 +129,7 @@ export function VisitForm({ recordId, onSent }: { recordId: number; onSent: () =
       </Field>
 
       <div className="cs-visit__send">
-        <Button variant="primary" icon={<IconCheck size={18} />} onClick={send} disabled={busy}>{busy ? 'Отправляем…' : 'Отправить инженеру'}</Button>
+        <Button variant="primary" icon={<IconCheck size={18} />} onClick={send} disabled={busy}>{busy ? stage || 'Отправляем…' : 'Отправить инженеру'}</Button>
       </div>
     </Card>
   );
