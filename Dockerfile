@@ -21,6 +21,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY db/migrations ./db/migrations
 COPY db/seed ./db/seed
+# Шаблоны актов ТП (Word со слиянием, без данных заявителей) — modules/tp/acts
+COPY assets ./assets
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod 755 /app/docker-entrypoint.sh
 EXPOSE 3000
