@@ -41,6 +41,8 @@ export const ACT_FIELDS: FieldInfo[] = [
   { name: 'длина_кабеля', label: 'Длина линии, м', source: 'engineer' },
   { name: 'Проект', label: 'Проект / паспорт ПУ', source: 'engineer' },
   { name: 'монтер', label: 'Монтёр (должность и ФИО, род. падеж)', source: 'engineer' },
+  { name: 'Подписант', label: 'Подписант (должность, ФИО, доверенность)', source: 'engineer' },
+  { name: 'Подписант_подпись', label: 'Подпись подписанта (И.О. Фамилия)', source: 'engineer' },
   // ПУ и ТТ
   { name: 'Тип_сетчика', label: 'Тип ПУ', source: 'meter' },
   { name: 'M__счетчика', label: '№ ПУ', source: 'meter' },
@@ -107,4 +109,31 @@ export function actValues(a: ActInput): Record<string, string | undefined> {
   };
   for (const f of ACT_FIELDS) for (const alias of f.aliases ?? []) v[alias] = v[f.name];
   return { ...v, ...a.overrides };
+}
+
+/** Поле анкеты для поля шаблона: путь в ActInput и вид ввода (интерфейс «Создание акта по ТУ»). */
+export type FieldInput = { path: string; type: 'text' | 'number' | 'date' | 'int' | 'long' };
+export const FIELD_INPUTS: Record<string, FieldInput> = {
+  Фио_полностью: { path: 'applicantFullName', type: 'text' }, основание: { path: 'basis', type: 'text' }, Адрес: { path: 'address', type: 'long' },
+  наименование_объекта: { path: 'objectName', type: 'text' }, M__договора: { path: 'contractNumber', type: 'text' }, дата_договора_ТП: { path: 'contractDate', type: 'date' },
+  M__ТУ: { path: 'tuNumber', type: 'text' }, Дата_ТУ: { path: 'tuDate', type: 'date' }, M__Заявки: { path: 'requestNumber', type: 'text' }, дата_заявки: { path: 'requestDate', type: 'date' },
+  Разрешенная_мощность: { path: 'powerAllowedKw', type: 'number' }, Присоединяемая: { path: 'powerAttachedKw', type: 'number' }, Существ_Мощ: { path: 'powerExistingKw', type: 'number' },
+  класс_напр: { path: 'voltageKv', type: 'text' }, ТП: { path: 'tp', type: 'text' }, Фидер: { path: 'feeder', type: 'text' },
+  ПС_напряжение: { path: 'substationVoltage', type: 'text' }, Питающий_центр: { path: 'supplyCenter', type: 'text' },
+  Выполнены_пункты_ТУ_сетевой: { path: 'tuPointsNetwork', type: 'text' }, Выполнены_пункты_ТУ_заявителем: { path: 'tuPointsApplicant', type: 'text' },
+  Предыдущий_собственник: { path: 'previousOwner', type: 'long' },
+  M__Акта_ТП: { path: 'actNumber', type: 'text' }, Дата_акта: { path: 'actDate', type: 'date' }, Номер_опоры: { path: 'poleNumber', type: 'text' },
+  номинальный_ток_ВА: { path: 'breakerA', type: 'text' }, марка_кабеля: { path: 'cableBrand', type: 'text' }, сечение_кабеля: { path: 'cableSection', type: 'text' },
+  длина_кабеля: { path: 'cableLengthM', type: 'number' }, Проект: { path: 'project', type: 'long' }, монтер: { path: 'monter', type: 'long' },
+  Тип_сетчика: { path: 'meter.type', type: 'text' }, M__счетчика: { path: 'meter.number', type: 'text' }, класс_точности_элсч: { path: 'meter.accuracyClass', type: 'text' },
+  квартал_проверки: { path: 'meter.checkQuarter', type: 'int' }, год_проверки: { path: 'meter.checkYear', type: 'int' },
+  Тип_ТТ: { path: 'ct.type', type: 'text' }, ТТ: { path: 'ct.numbers', type: 'text' }, Класс_точности_: { path: 'ct.accuracyClass', type: 'text' },
+  КТТ: { path: 'ct.ratio', type: 'text' }, квартал_проверки1: { path: 'ct.checkQuarter', type: 'int' }, год_проверки1: { path: 'ct.checkYear', type: 'int' },
+};
+
+/** Имя поля шаблона → имя из словаря (с учётом синонимов вроде «Присоединяевая»). */
+export function canonicalField(name: string): string | null {
+  const key = (s: string) => s.toLowerCase().replace(/ё/g, 'е').replace(/[\s_.]+/g, '');
+  const k = key(name);
+  return ACT_FIELDS.find(f => key(f.name) === k || f.aliases?.some(a => key(a) === k))?.name ?? null;
 }

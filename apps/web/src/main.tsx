@@ -8,5 +8,6 @@ import './styles/login.css';
 import './styles/admin.css';
 import './styles/riru.css';
 import './styles/consumers.css';
+import './styles/tp-acts.css';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);

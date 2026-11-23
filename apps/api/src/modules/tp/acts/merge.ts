@@ -15,6 +15,15 @@ const PARTS = /^word\/(document|header\d*|footer\d*)\.xml$/;
 const TOKEN = /<w:fldChar\b[^>]*?(?:\/>|>[\s\S]*?<\/w:fldChar>)|<w:instrText\b[^>]*>[\s\S]*?<\/w:instrText>|<w:instrText\b[^>]*\/>|<w:t(?=[\s>\/])[^>]*\/>|<w:t(?=[\s>])[^>]*>[\s\S]*?<\/w:t>/g;
 const FIELD_NAME = /^\s*MERGEFIELD\s+(?:"([^"]+)"|(\S+))/i;
 
+/** Упаковка Word без записей-папок («word/embeddings/»): их не пишет Word, а проверка
+ *  загрузки TP (validateDocx) считает путь с «embeddings» вложением и отклоняет файл. */
+export async function packDocx(zip: JSZip): Promise<Buffer> {
+  const out = new JSZip();
+  for (const [name, entry] of Object.entries(zip.files))
+    if (!entry.dir) out.file(name, await entry.async('uint8array'), { createFolders: false, date: entry.date });
+  return out.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+}
+
 const unescape = (s: string) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const fieldName = (instr: string) => { const m = FIELD_NAME.exec(unescape(instr)); return m ? (m[1] ?? m[2]).trim() : null; };
@@ -110,7 +119,7 @@ export async function fillTemplate(template: Buffer | Uint8Array, values: Record
   if (settings) zip.file('word/settings.xml', (await settings.async('string')).replace(/<w:mailMerge>[\s\S]*?<\/w:mailMerge>/g, ''));
   const rels = zip.file('word/_rels/settings.xml.rels');
   if (rels) zip.file('word/_rels/settings.xml.rels', (await rels.async('string')).replace(/<Relationship\b[^>]*(?:mailMergeSource|recipientData|mailMergeHeaderSource)[^>]*\/>/g, ''));
-  const docx = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+  const docx = await packDocx(zip);
   return { docx, fields: [...seen], missing: [...missing] };
 }
 
@@ -126,8 +135,8 @@ export async function blankTemplate(template: Buffer | Uint8Array): Promise<Buff
   const settings = zip.file('word/settings.xml');
   if (settings) zip.file('word/settings.xml', (await settings.async('string')).replace(/<w:mailMerge>[\s\S]*?<\/w:mailMerge>/g, ''));
   const rels = zip.file('word/_rels/settings.xml.rels');
-  if (rels) zip.file('word/_rels/settings.xml.rels', (await rels.async('string')).replace(/<Relationship[^>]*(?:mailMergeSource|recipientData|mailMergeHeaderSource)[^>]*\/>/g, ''));
-  return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+  if (rels) zip.file('word/_rels/settings.xml.rels', (await rels.async('string')).replace(/<Relationship\b[^>]*(?:mailMergeSource|recipientData|mailMergeHeaderSource)[^>]*\/>/g, ''));
+  return packDocx(zip);
 }
 
 /** Имена полей слияния шаблона (в порядке первого появления). */

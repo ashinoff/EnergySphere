@@ -41,8 +41,10 @@ export class ApiError extends Error {
 }
 
 async function readError(response: Response) {
-  const body = await response.json().catch(() => null) as { error?: string } | null;
-  return new ApiError(response.status, body?.error ?? `Ошибка сервера (${response.status})`);
+  // У Сферы error — строка, у API актов ТП — { code, message }
+  const body = await response.json().catch(() => null) as { error?: string | { message?: string } } | null;
+  const error = typeof body?.error === 'string' ? body.error : body?.error?.message;
+  return new ApiError(response.status, error ?? `Ошибка сервера (${response.status})`);
 }
 
 export async function login(username: string, password: string) {
@@ -110,6 +112,9 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
   const response = await authorized(path, init);
   return response.status === 204 ? (undefined as T) : response.json();
 }
+
+// Ответ целиком (файл из POST, заголовки) — с той же авторизацией и разбором ошибок.
+export const apiFetch = (path: string, init: RequestInit & { json?: unknown } = {}) => authorized(path, init);
 
 // Файл (например, PDF) с авторизацией — ссылкой его не открыть: нужен заголовок с токеном.
 export async function apiBlob(path: string): Promise<Blob> {

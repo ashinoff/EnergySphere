@@ -4,6 +4,7 @@ import { PlanPage } from './riru/PlanPage.js';
 import { TechCards } from './riru/TechCards.js';
 import { DocsPage } from './riru/DocsPage.js';
 import { TP_ROLE_INFO, TpRoleInfo } from './tp/TpRoleInfo.js';
+import { ActBuilder } from './tp/ActBuilder.js';
 import { SearchPage } from './consumers/SearchPage.js';
 import { VisitsPage } from './consumers/VisitsPage.js';
 import { RegistryPage } from './consumers/RegistryPage.js';
@@ -25,6 +26,7 @@ export function ModulePage({ module, page }: { module: ModuleMeta; page: MenuIte
     if (page.id === 'technology') return <TechCards module={module} page={page} />;
     if (page.id === 'docs') return <DocsPage module={module} page={page} />;
   }
+  if (module.id === 'tp' && page.id === 'create') return <ActBuilder module={module} page={page} />;
   // Раздел «Актов ТП», которого нет у человека в маршруте, — объяснение вместо экрана TP.
   if (module.id === 'tp' && TP_ROLE_INFO[page.id]) return <TpRoleInfo module={module} page={page} />;
   return (

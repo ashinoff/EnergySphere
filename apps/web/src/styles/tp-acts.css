@@ -1,0 +1,47 @@
+/* Модуль 04 «Акты ТП» → «Создание акта по ТУ» (modules/tp/ActBuilder.tsx).
+   Цвет — через --accent/--accent-strong модуля (лиловый). */
+
+.ab { display: grid; gap: 16px; }
+.ab .card + .card { margin-top: 0; }
+.ab-act { display: grid; gap: 12px; max-width: 900px; }
+.ab-act__meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 14px; }
+.ab-chip { font-size: 13px; font-weight: 650; color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 38%, #fff); padding: 5px 10px; border-radius: 8px; }
+.ab-note { margin: 0; }
+
+.ab-axes { display: grid; gap: 16px; }
+.ab-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.ab-points { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ab-point {
+  position: relative; display: grid; justify-items: center; gap: 8px; padding: 16px 12px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.ab-point svg { width: 56px; height: 56px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ab-point:hover { background: var(--surface-2); color: var(--text); }
+.ab-point.is-active { border-color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 22%, #fff); color: var(--accent-strong); }
+.ab-point em { position: absolute; top: 8px; right: 8px; font-style: normal; font-size: 11px; font-weight: 700; color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 45%, #fff); padding: 2px 6px; border-radius: 6px; }
+
+.ab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.ab-block { border-top: 4px solid var(--border-strong); }
+.ab-block--tu { border-top-color: var(--accent); }
+.ab-block--engineer { border-top-color: var(--accent-strong); }
+.ab-block--meter { border-top-color: var(--warn); }
+.ab-block--computed { border-top-color: var(--ok); }
+.ab-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 14px; }
+.ab-meters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+
+.ab-computed { display: grid; grid-template-columns: max-content 1fr; gap: 10px 16px; margin: 0; font-size: 14px; }
+.ab-computed dt { color: var(--text-muted); padding-top: 2px; }
+.ab-computed dd { margin: 0; }
+.ab-losses { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; }
+.ab-losses p { margin: 0; line-height: 1.6; }
+
+.ab-status p { margin: 0; }
+.ab-saved { display: flex; gap: 10px; align-items: center; color: var(--ok); font-weight: 600; }
+
+@media (max-width: 900px) {
+  .ab-grid { grid-template-columns: 1fr; }
+  .ab-computed { grid-template-columns: 1fr; gap: 4px; }
+  .ab-computed dd { margin-bottom: 8px; }
+}

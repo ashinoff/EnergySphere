@@ -8,6 +8,7 @@ import { DEV_IDENTITY, asDevSuper } from '../../core/dev.js';
 import { createApp as createTpApp } from './core/app.js';
 import { HttpError as TpHttpError } from './core/db.js';
 import { TP_ISSUER, syncTpUser } from './bridge.js';
+import { actBuilder } from './acts/routes.js';
 
 // Модуль 04 «Акты ТП» = TP_Approval (core/ — импорт scripts/import-tp.mjs).
 // Его приложение работает как есть в режиме keycloak; вместо проверки токена
@@ -47,5 +48,7 @@ export function mountTp(app: Express, { db, tpDb, verify, access }: { db: Db; tp
     webPath: resolve(config.webPath, 'tp'),
     trustProxyHops: 1,
   }, authenticate);
+  // «Создание акта по ТУ» (modules/tp/acts) — раньше приложения TP: у него свой ответ 404.
+  app.use('/tp/api/v1/act-builder', actBuilder({ pool: tpDb, authenticate, storagePath: join(config.storagePath, 'tp') }));
   app.use('/tp', tp);
 }

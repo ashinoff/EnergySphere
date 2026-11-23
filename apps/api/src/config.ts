@@ -18,6 +18,9 @@ export const config = {
   seedPath: process.env.SEED_PATH ?? 'db/seed',
   storagePath: process.env.STORAGE_PATH ?? '.data/storage',
   authDisabled: process.env.AUTH_DISABLED === 'true',
+  // «Учёт ПУ» (Светлячок): ПУ по номеру договора для акта ТП. Пусто — только ручной ввод.
+  svetlyachokUrl: (process.env.SVETLYACHOK_URL ?? '').replace(/\/+$/, ''),
+  svetlyachokKey: process.env.SVETLYACHOK_KEY ?? '',
 };
 
 export const oidcBase = () => `${config.keycloakUrl}/realms/${config.realm}`;
