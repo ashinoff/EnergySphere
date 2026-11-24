@@ -23,11 +23,9 @@
 .ab-point em { position: absolute; top: 8px; right: 8px; font-style: normal; font-size: 11px; font-weight: 700; color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 45%, #fff); padding: 2px 6px; border-radius: 6px; }
 
 .ab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
-.ab-block { border-top: 4px solid var(--border-strong); }
-.ab-block--tu { border-top-color: var(--accent); }
-.ab-block--engineer { border-top-color: var(--accent-strong); }
-.ab-block--meter { border-top-color: var(--warn); }
-.ab-block--computed { border-top-color: var(--ok); }
+/* Блоки анкеты — цветные блоки (.block, ui.css) */
+.ab-block.card { padding: 18px 20px; }
+.ab-block .card__head { margin-bottom: 12px; }
 .ab-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 14px; }
 .ab-meters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 

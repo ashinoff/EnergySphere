@@ -124,3 +124,24 @@
 .toast--error { background: var(--danger); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
 @media (max-width: 600px) { .toasts { left: 12px; right: 12px; bottom: 12px; } .toast { max-width: none; } }
+
+/* ── Цветной блок (стиль «Учёта ПУ», решение владельца 24.11.2026) ─────────────
+   Блок целиком залит своим оттенком, заголовок — цветная плашка с белым текстом.
+   НИКОГДА: полос слева/сверху (border-left/border-top цветом), подчёркиваний строк
+   внутри блока. Оттенок: .block--1 … .block--6 или по кругу в .blocks. */
+.block { --b-bg: var(--block-1); --b-ink: var(--block-1-ink); padding: 16px 18px; border-radius: var(--radius-lg); background: var(--b-bg); border: 0; box-shadow: 0 1px 2px rgba(20, 24, 31, .05); }
+.block__title, .block > .card__head .card__title {
+  display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin: 0 0 10px; padding: 6px 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 700; letter-spacing: .02em; color: #fff; background: var(--b-ink);
+}
+.block--1 { --b-bg: var(--block-1); --b-ink: var(--block-1-ink); }
+.block--2 { --b-bg: var(--block-2); --b-ink: var(--block-2-ink); }
+.block--3 { --b-bg: var(--block-3); --b-ink: var(--block-3-ink); }
+.block--4 { --b-bg: var(--block-4); --b-ink: var(--block-4-ink); }
+.block--5 { --b-bg: var(--block-5); --b-ink: var(--block-5-ink); }
+.block--6 { --b-bg: var(--block-6); --b-ink: var(--block-6-ink); }
+.blocks > .block:nth-child(6n+2) { --b-bg: var(--block-2); --b-ink: var(--block-2-ink); }
+.blocks > .block:nth-child(6n+3) { --b-bg: var(--block-3); --b-ink: var(--block-3-ink); }
+.blocks > .block:nth-child(6n+4) { --b-bg: var(--block-4); --b-ink: var(--block-4-ink); }
+.blocks > .block:nth-child(6n+5) { --b-bg: var(--block-5); --b-ink: var(--block-5-ink); }
+.blocks > .block:nth-child(6n+6) { --b-bg: var(--block-6); --b-ink: var(--block-6-ink); }

@@ -181,9 +181,10 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
           <h2 className="cs-card__title">{card.title || 'Без наименования'}</h2>
           {card.address && <p className="cs-card__addr">{card.address}</p>}
         </div>
+        <div className="cs-sections blocks">
         {sections(card.zones.length > 1 ? card.cells.filter(([l]) => !zoneDiff(card.zones).differ.includes(l)) : card.cells).map(sec => (
-          <section key={sec.title} className="cs-section">
-            {sec.title && <h3 className="cs-section__title">{sec.title}</h3>}
+          <section key={sec.title} className="cs-section block">
+            {sec.title && <h3 className="block__title">{sec.title}</h3>}
             <dl className="cs-fields">
               {sec.rows.map(([label, value], i) => (
                 <div key={i} className="cs-fields__row"><dt>{label}</dt><dd>{fieldValue(label, value)}</dd></div>
@@ -191,6 +192,7 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
             </dl>
           </section>
         ))}
+        </div>
       </Card>
 
       {card.zones.length > 1 && <ZonesCard zones={card.zones} />}

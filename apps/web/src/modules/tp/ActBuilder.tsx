@@ -284,7 +284,7 @@ export function ActBuilder({ module, page }: { module: ModuleMeta; page: MenuIte
                   ) : null;
                   if (!list.length && !extra) return null;
                   return (
-                    <Card key={source} title={SOURCE_TITLES[source]} className={`ab-block ab-block--${source}`}
+                    <Card key={source} title={SOURCE_TITLES[source]} className={`ab-block block block--${({ tu: 1, engineer: 4, meter: 3 } as const)[source]}`}
                       aside={source === 'meter' && (
                         <Button variant="ghost" onClick={loadMeters} disabled={!catalog.svetlyachok || !!busy}
                           title={catalog.svetlyachok ? 'ПУ по номеру договора из «Учёт ПУ»' : 'Связь с «Учёт ПУ» не настроена'}>
@@ -301,7 +301,7 @@ export function ActBuilder({ module, page }: { module: ModuleMeta; page: MenuIte
                   );
                 })}
 
-                <Card title="Посчитано" className="ab-block ab-block--computed">
+                <Card title="Посчитано" className="ab-block block block--2">
                   <dl className="ab-computed">
                     {template?.fields.includes('ФИО') && <><dt>Заявитель кратко</dt><dd>{preview?.computed.ФИО || '—'}</dd></>}
                     {template?.fields.includes('склонен') && (

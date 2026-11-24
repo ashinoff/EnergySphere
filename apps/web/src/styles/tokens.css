@@ -18,6 +18,15 @@
   --ok: #2f7d4f;
   --ok-bg: #e7f3ea;
 
+  /* Цветные блоки (карточки с разделами): фон блока и плашка заголовка — по кругу.
+     Оттенки — цвета модулей и два спокойных дополнительных. */
+  --block-1: #e2eef9; --block-1-ink: #34548a;
+  --block-2: #e3f1ec; --block-2-ink: #2f6f58;
+  --block-3: #f7ecdc; --block-3-ink: #8a5a12;
+  --block-4: #ece7f4; --block-4-ink: #5e4387;
+  --block-5: #f1efe2; --block-5-ink: #6b5d2a;
+  --block-6: #f6e6e3; --block-6-ink: #8a3b33;
+
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;

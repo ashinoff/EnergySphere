@@ -35,23 +35,15 @@
 .cs-card { display: grid; gap: 16px; }
 .cs-card > .btn { justify-self: start; }
 .card.cs-card .card + .card, .cs-card .card + .card { margin-top: 0; }
-.cs-card__head {
-  display: grid; gap: 8px; margin: -4px -4px 18px; padding: 18px 20px; border-radius: var(--radius);
-  background: color-mix(in srgb, var(--accent) 30%, #fff); border-left: 5px solid var(--accent-strong);
-}
+.cs-card__head { display: grid; gap: 8px; margin-bottom: 16px; padding: 18px 20px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--accent) 34%, #fff); }
 .cs-card__title { font-size: 22px; line-height: 1.25; }
 .cs-card__addr { color: var(--text); font-weight: 500; }
-/* Разделы реестра — цветные блоки с заголовком-плашкой (оттенки цвета модуля по очереди) */
-.cs-section { --sec: color-mix(in srgb, var(--accent) 13%, #fff); padding: 14px 18px 6px; border-radius: var(--radius); background: var(--sec); border-left: 4px solid var(--accent); }
-.cs-section:nth-of-type(even) { --sec: color-mix(in srgb, var(--accent) 6%, var(--surface-2)); border-left-color: var(--accent-strong); }
-.cs-section + .cs-section { margin-top: 12px; }
-.cs-section__title {
-  display: inline-flex; margin-bottom: 6px; padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .05em; color: #fff; background: var(--accent-strong);
-}
-.cs-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 28px; margin: 0; }
-.cs-fields__row { display: grid; grid-template-columns: minmax(120px, 42%) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); font-size: 14px; align-items: center; }
-.cs-fields__row dt { color: var(--text-soft); }
+/* Разделы реестра — цветные блоки (.block в .blocks, ui.css): две колонки на широком экране */
+.cs-sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; align-items: start; }
+.cs-section .block__title { margin-bottom: 6px; }
+.cs-fields { display: grid; gap: 2px; margin: 0; }
+.cs-fields__row { display: grid; grid-template-columns: minmax(120px, 40%) 1fr; gap: 12px; padding: 7px 0; font-size: 14px; align-items: center; }
+.cs-fields__row dt { color: var(--text-muted); }
 .cs-fields__row dd { margin: 0; font-weight: 550; overflow-wrap: anywhere; }
 
 .cs-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -151,6 +143,7 @@
   .cs-search .select, .cs-search .btn { width: 100%; }
   .cs-search__field.search { flex-basis: 100%; }
   .cs-fields { grid-template-columns: 1fr; }
+  .cs-sections { grid-template-columns: 1fr; }
   .cs-visits, .cs-registries { grid-template-columns: 1fr; }
   .cs-visit__step > .btn, .cs-visit__send .btn, .cs-visit__geo-actions .btn { flex: 1 1 100%; width: 100%; }
   .cs-map { height: 300px; }
@@ -164,11 +157,11 @@
 .cs-subs__bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
 .cs-subs__bar .select { max-width: 320px; }
 .cs-subs__stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.cs-stat { display: grid; gap: 2px; padding: 16px 18px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); border-top: 4px solid var(--accent); }
+.cs-stat { display: grid; gap: 2px; padding: 16px 18px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--accent) 24%, #fff); }
 .cs-stat b { font-size: 28px; line-height: 1.1; color: var(--accent-strong); }
 .cs-stat span { font-weight: 600; }
 .cs-stat small { color: var(--text-muted); }
-.cs-stat--danger { border-top-color: var(--danger); }
+.cs-stat--danger { background: var(--danger-bg); }
 .cs-stat--danger b { color: var(--danger); }
 .cs-map--big { height: 560px; border-radius: 0; border: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .cs-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 22px; font-size: 13px; align-items: center; }
