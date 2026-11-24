@@ -35,13 +35,22 @@
 .cs-card { display: grid; gap: 16px; }
 .cs-card > .btn { justify-self: start; }
 .card.cs-card .card + .card, .cs-card .card + .card { margin-top: 0; }
-.cs-card__head { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.cs-card__head {
+  display: grid; gap: 8px; margin: -4px -4px 18px; padding: 18px 20px; border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 30%, #fff); border-left: 5px solid var(--accent-strong);
+}
 .cs-card__title { font-size: 22px; line-height: 1.25; }
-.cs-card__addr { color: var(--text-muted); }
-.cs-section + .cs-section { margin-top: 18px; }
-.cs-section__title { margin-bottom: 2px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-strong); }
+.cs-card__addr { color: var(--text); font-weight: 500; }
+/* Разделы реестра — цветные блоки с заголовком-плашкой (оттенки цвета модуля по очереди) */
+.cs-section { --sec: color-mix(in srgb, var(--accent) 13%, #fff); padding: 14px 18px 6px; border-radius: var(--radius); background: var(--sec); border-left: 4px solid var(--accent); }
+.cs-section:nth-of-type(even) { --sec: color-mix(in srgb, var(--accent) 6%, var(--surface-2)); border-left-color: var(--accent-strong); }
+.cs-section + .cs-section { margin-top: 12px; }
+.cs-section__title {
+  display: inline-flex; margin-bottom: 6px; padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: #fff; background: var(--accent-strong);
+}
 .cs-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 28px; margin: 0; }
-.cs-fields__row { display: grid; grid-template-columns: minmax(120px, 42%) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.cs-fields__row { display: grid; grid-template-columns: minmax(120px, 42%) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); font-size: 14px; align-items: center; }
 .cs-fields__row dt { color: var(--text-soft); }
 .cs-fields__row dd { margin: 0; font-weight: 550; overflow-wrap: anywhere; }
 
@@ -50,7 +59,14 @@
 .cs-history .badge { margin: 0; }
 .cs-link { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-strong); font-weight: 600; text-decoration: none; }
 .cs-link:hover { text-decoration: underline; }
-.cs-route { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+.cs-route { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cs-route__coords { font-variant-numeric: tabular-nums; }
+.cs-route__btns { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.cs-route__btn { text-decoration: none; color: var(--accent-strong); font-weight: 650; }
+.cs-route__btn.btn--primary { color: var(--text); }
+.cs-route__btn--navi { border-color: var(--accent-strong); color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 18%, #fff); }
+.cs-route__btn--navi:hover { background: color-mix(in srgb, var(--accent) 32%, #fff) !important; }
+.cs-history .cs-route { flex: 0 0 auto; }
 
 /* Тарифные зоны — таблица различий */
 .cs-zones__scroll { overflow-x: auto; }

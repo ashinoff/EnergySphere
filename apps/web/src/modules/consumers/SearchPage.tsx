@@ -202,7 +202,7 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
               <li key={v.id}>
                 <Badge tone={v.status === 'new' ? 'accent' : 'ok'}>{v.status === 'new' ? 'У инженера' : 'Завершена'}</Badge>
                 <span>{fmtTime(v.createdAt)} · {v.author ?? 'монтёр'}</span>
-                {v.geo && <a className="cs-link" href={mapUrl(v.geo)} target="_blank" rel="noreferrer"><IconMap size={16} />на карте</a>}
+                {v.geo && <a className="btn btn--secondary cs-route__btn cs-route__btn--navi" href={mapUrl(v.geo)} target="_blank" rel="noreferrer"><span className="btn__icon"><IconMap size={18} /></span><span>На карте</span></a>}
                 {v.geo && <RouteLinks geo={v.geo} />}
                 <span className="muted">{v.files.filter(f => f.kind === 'photo').length} фото{v.files.some(f => f.kind === 'psu') ? ' · ПСУ' : ''}</span>
               </li>
