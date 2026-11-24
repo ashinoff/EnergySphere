@@ -12,6 +12,7 @@ import { requirePermission, route, userOf } from '../../core/http.js';
 import type { UserContext } from '../../core/access-service.js';
 import { psuPdf, toViewable } from './files.js';
 import { createGeocoder } from './geocoder.js';
+import { mountSubstations } from './substations.js';
 
 // Модуль 02 «Поиск потребителя». У каждого РЭС свой реестр (расширенный список,
 // как в Web_abonent): его обновляет инженер РИРУ своего РЭС. Монтёр находит
@@ -99,6 +100,7 @@ export async function consumersBadge(db: Db, user: UserContext) {
 
 export function mountConsumers(app: Express, { db }: { db: Db }) {
   const view = requirePermission('consumers.view');
+  mountSubstations(app, { db });
 
   // Счётчик на пункте меню «Отметки монтёров» — оболочка опрашивает часто.
   app.get('/api/consumers/new-count', route(async (_req, res) => {

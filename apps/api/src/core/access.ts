@@ -52,6 +52,7 @@ export const PERMISSIONS = {
   'consumers.field':          { group: 'consumers', title: 'Ставить геометку, прикладывать фото объекта и ПСУ' },
   'consumers.inbox':          { group: 'consumers', title: 'Видеть отметки монтёров, скачивать фото и ПСУ' },
   'consumers.complete':       { group: 'consumers', title: 'Завершать отметки монтёров' },
+  'consumers.substations':    { group: 'consumers', title: 'Загружать справочник ТП с координатами (все РЭС)' },
   'riru.view':                { group: 'riru',      title: 'Открывать раздел' },
   'riru.edit':                { group: 'riru',      title: 'Редактировать планы и технологию работ' },
   'riru.docs':                { group: 'riru',      title: 'Загружать нормативные документы' },

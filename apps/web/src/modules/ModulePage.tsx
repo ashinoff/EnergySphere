@@ -8,6 +8,7 @@ import { ActBuilder } from './tp/ActBuilder.js';
 import { SearchPage } from './consumers/SearchPage.js';
 import { VisitsPage } from './consumers/VisitsPage.js';
 import { RegistryPage } from './consumers/RegistryPage.js';
+import { SubstationsPage } from './consumers/SubstationsPage.js';
 
 // Страница модуля по пункту меню. Модуль 01 (анализ) живёт во фрейме —
 // его показывает Shell (AnalysisHost). Ещё не сделанные модули — заглушка.
@@ -18,6 +19,7 @@ export function ModulePage({ module, page }: { module: ModuleMeta; page: MenuIte
     if (page.id === 'inbox') return <VisitsPage key="new" kind="new" module={module} page={page} />;
     if (page.id === 'done') return <VisitsPage key="done" kind="done" module={module} page={page} />;
     if (page.id === 'registry') return <RegistryPage module={module} page={page} />;
+    if (page.id === 'substations') return <SubstationsPage module={module} page={page} />;
   }
   if (module.id === 'riru') {
     if (page.id === 'strategic' || page.id === 'tactical' || page.id === 'operational') {

@@ -297,3 +297,61 @@ test('дом по адресу реестра: без квартиры, «д.» 
   const far = await rural.lookup('с. Волковка, ул. Садовая, д. 1');
   assert.deepEqual(far.places.map(p => [p.city, p.level, p.exact]), [['Волковка', 'place', false]]);
 });
+
+test('ТП и карта: ТП и координаты из реестра, справочник ТП от администратора, число потребителей на ТП', async () => {
+  const { tpKey, parseCoords } = await import('../apps/api/src/modules/consumers/substations.js');
+  assert.equal(tpKey('ТП-Д165'), 'Д165'); assert.equal(tpKey('Д-165'), 'Д165'); assert.equal(tpKey('тп д 165'), 'Д165');
+  assert.equal(tpKey('КТПН-12'), '12'); assert.equal(tpKey('РП-59'), 'РП59');
+  assert.deepEqual(parseCoords('43,8135; 39,6107'), { lat: 43.8135, lon: 39.6107 });
+  assert.deepEqual(parseCoords('43.8135, 39.6107'), { lat: 43.8135, lon: 39.6107 });
+  assert.deepEqual(parseCoords('43,8135, 39,6107'), { lat: 43.8135, lon: 39.6107 });
+  assert.equal(parseCoords('нет'), null);
+
+  // Реестр Хосты с «Подключение · ТП» и «Координаты» (у одного ПУ — две тарифные зоны)
+  const labels = ['Прибор учета · Номер счетчика', 'ЛС / ЛС СТЕК', 'Наименование договора', 'Подключение · ТП', 'Координаты'];
+  const r = (meter: string, account: string, tp: string, coords: string | null) =>
+    ({ meter, account, title: `Потребитель ${account}`, address: 'г. Сочи', values: [meter, account, `Потребитель ${account}`, tp, coords] });
+  const start = await request(app).post(`/api/consumers/registry/${hosta}/start`).set(H.eng2).send({ fileName: 'Хоста.xlsx', labels });
+  await request(app).post(`/api/consumers/registry/uploads/${start.body.uploadId}/rows`).set(H.eng2).send({ rows: [
+    r('101', '9001', 'ТП-Х10', '43,5100; 39,8000'), r('101', '9001', 'ТП-Х10', '43,5100; 39,8000'),   // зоны одного ПУ
+    r('102', '9002', 'ТП-Х10', '43,5300; 39,8000'),   // ≈2,2 км от ТП — подозрительно
+    r('103', '9003', 'Х-11', null), r('104', '9004', 'ТП-Х99', '43,5000; 39,7000'), r('105', '9005', '', null),
+  ] });
+  assert.equal((await request(app).post(`/api/consumers/registry/uploads/${start.body.uploadId}/finish`).set(H.eng2)).status, 200);
+
+  // карточка: координаты как есть (ссылку на маршрут строит интерфейс)
+  const found = (await request(app).get('/api/consumers/search').query({ q: '9001' }).set(H.monter2)).body.items[0];
+  assert.deepEqual((await request(app).get(`/api/consumers/records/${found.id}`).set(H.monter2)).body.cells.at(-1), ['Координаты', '43,5100; 39,8000']);
+
+  // справочник грузит только администратор
+  const directory = [
+    { res: 'Хостинский РЭС', tp: 'ТП-Х10', coords: '43,5101; 39,8001' },
+    { res: 'хостинский', tp: 'ТП-Х11', coords: '43.52, 39.81' },
+    { res: 'Хостинский РЭС', tp: 'ТП-Х12', coords: '' },
+    { res: 'Тимашевский РЭС', tp: 'ТП-1', coords: '45; 38' },
+    { res: 'Хостинский РЭС', tp: 'ТП-Х13', coords: 'где-то' },
+  ];
+  assert.equal((await request(app).post('/api/consumers/substations').set(H.eng2).send({ rows: directory })).status, 403);
+  const up = await request(app).post('/api/consumers/substations').set(H.boss).send({ rows: directory });
+  assert.equal(up.status, 200, JSON.stringify(up.body));
+  assert.deepEqual(up.body.loaded, [{ res: 'Хостинский РЭС', count: 3, withCoords: 2 }]);
+  assert.equal(up.body.skippedTotal, 2);
+  assert.match(up.body.skipped[0].reason, /Тимашевский РЭС.*не найден/);
+
+  // инженер Хосты видит свой РЭС: числа по реестру, ТП не из справочника — отдельно
+  const view = await request(app).get('/api/consumers/substations').set(H.eng2);
+  assert.equal(view.status, 200);
+  const c = view.body.current;
+  assert.equal(c.name, 'Хостинский РЭС');
+  assert.deepEqual(c.columns, { tp: 'Подключение · ТП', coords: 'Координаты' });
+  assert.deepEqual(c.substations.map((s: { name: string; consumers: number; withCoords: number }) => [s.name, s.consumers, s.withCoords]),
+    [['ТП-Х10', 2, 2], ['ТП-Х11', 1, 0], ['ТП-Х12', 0, 0]]);
+  assert.deepEqual(c.unknown, [{ name: 'ТП-Х99', consumers: 1, withCoords: 1 }]);
+  assert.deepEqual(c.totals, { consumers: 5, withCoords: 3, noTp: 1, linked: 3 });
+  assert.equal(c.points.length, 3);
+  assert.equal((await request(app).get('/api/consumers/substations').query({ res: adler }).set(H.eng2)).status, 403);
+  // Адлер: реестр без столбцов ТП и координат — справочника нет, столбцы не найдены
+  const adl = (await request(app).get('/api/consumers/substations').set(H.eng)).body.current;
+  assert.deepEqual(adl.columns, { tp: null, coords: null });
+  assert.equal(adl.substations.length, 0);
+});

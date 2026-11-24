@@ -14,7 +14,7 @@ interface Xlsx {
 
 // SheetJS уже лежит в поставке (им пользуется анализатор) — подгружаем по требованию.
 let loading: Promise<Xlsx> | null = null;
-function sheetJs(): Promise<Xlsx> {
+export function sheetJs(): Promise<Xlsx> {
   const ready = (window as unknown as { XLSX?: Xlsx }).XLSX;
   if (ready) return Promise.resolve(ready);
   loading ??= new Promise((resolve, reject) => {

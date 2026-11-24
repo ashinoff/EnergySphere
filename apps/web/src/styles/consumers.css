@@ -50,6 +50,7 @@
 .cs-history .badge { margin: 0; }
 .cs-link { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-strong); font-weight: 600; text-decoration: none; }
 .cs-link:hover { text-decoration: underline; }
+.cs-route { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
 
 /* Тарифные зоны — таблица различий */
 .cs-zones__scroll { overflow-x: auto; }
@@ -140,3 +141,32 @@
   .cs-visit-card__facts > div { grid-template-columns: 96px 1fr; }
   .cs-result { padding: 14px 16px; }
 }
+
+/* ── ТП и карта ─────────────────────────────────────────────────────── */
+.cs-subs { display: grid; gap: 16px; }
+.cs-subs .card + .card { margin-top: 0; }
+.cs-subs__bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.cs-subs__bar .select { max-width: 320px; }
+.cs-subs__stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.cs-stat { display: grid; gap: 2px; padding: 16px 18px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); border-top: 4px solid var(--accent); }
+.cs-stat b { font-size: 28px; line-height: 1.1; color: var(--accent-strong); }
+.cs-stat span { font-weight: 600; }
+.cs-stat small { color: var(--text-muted); }
+.cs-stat--danger { border-top-color: var(--danger); }
+.cs-stat--danger b { color: var(--danger); }
+.cs-map--big { height: 560px; border-radius: 0; border: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.cs-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 22px; font-size: 13px; align-items: center; }
+.cs-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cs-legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.cs-legend i.is-none { background: #8a929c; }
+.cs-tp { display: inline-flex !important; align-items: center; gap: 4px; width: auto !important; height: auto !important; padding: 3px 7px; white-space: nowrap;
+  background: var(--surface); border: 2px solid var(--accent-strong); border-radius: 6px; font: 600 12px/1.2 var(--font); color: var(--text); box-shadow: var(--shadow); cursor: pointer; }
+.cs-tp b { color: var(--accent-strong); }
+.cs-tp.is-selected { background: var(--accent-strong); color: #fff; }
+.cs-tp.is-selected b { color: #fff; }
+.cs-popup { font: 13px/1.5 var(--font); }
+.cs-subs__table tbody tr { cursor: pointer; }
+.cs-subs__table tr.is-selected td { background: color-mix(in srgb, var(--accent) 30%, #fff); }
+.cs-subs__pad { padding: 16px 22px; }
+.cs-skipped { margin: 0; padding-left: 18px; font-size: 14px; color: var(--text-muted); }
+@media (max-width: 900px) { .cs-map--big { height: 420px; } }

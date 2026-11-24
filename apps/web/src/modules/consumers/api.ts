@@ -48,3 +48,22 @@ export async function saveFile(path: string, name: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
+
+// Координаты из реестра: «43,8135; 39,6107», «43.8135, 39.6107» → широта и долгота.
+export function parseCoords(value: string): { lat: number; lon: number } | null {
+  const nums = value.match(/-?\d{1,3}(?:[.,]\d+)?/g);
+  if (!nums || nums.length !== 2) return null;
+  const [lat, lon] = nums.map(n => Number(n.replace(',', '.')));
+  if (!(Math.abs(lat) <= 90 && Math.abs(lon) <= 180) || (lat === 0 && lon === 0)) return null;
+  return { lat, lon };
+}
+// Маршрут от текущего места: Яндекс Карты (в телефоне откроют приложение) и Навигатор.
+export const routeUrl = (g: { lat: number; lon: number }) => `https://yandex.ru/maps/?rtext=~${g.lat},${g.lon}&rtt=auto`;
+export const naviUrl = (g: { lat: number; lon: number }) => `yandexnavi://build_route_on_map?lat_to=${g.lat}&lon_to=${g.lon}`;
+export const isPhone = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+/** Расстояние по прямой, м. */
+export function distanceM(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
+  const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(h));
+}

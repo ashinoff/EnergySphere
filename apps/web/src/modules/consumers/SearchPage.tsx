@@ -4,7 +4,8 @@ import { api } from '../../auth/session.js';
 import { Badge, Button, Card, Empty, Input, PageHeader, Select, useToast } from '../../ui/kit.js';
 import { IconArrowLeft, IconMap, IconSearch } from '../../ui/icons.js';
 import type { MenuItem, ModuleMeta } from '../registry.js';
-import { fmtTime, loadRes, mapUrl, type Card as CardData, type Found, type ResInfo } from './api.js';
+import { fmtTime, loadRes, mapUrl, parseCoords, type Card as CardData, type Found, type ResInfo } from './api.js';
+import { RouteLinks } from './RouteLinks.js';
 import { VisitForm } from './VisitForm.js';
 
 // Поиск потребителя по № ПУ или ЛС (часть номера тоже подходит) и карточка со
@@ -159,6 +160,12 @@ function sections(cells: [string, string][]) {
   return out;
 }
 
+// Координаты из реестра — сразу маршрут до потребителя (в телефоне — Навигатор).
+function fieldValue(label: string, value: string) {
+  const geo = /координат/i.test(label) ? parseCoords(value) : null;
+  return geo ? <RouteLinks geo={geo} label={value} /> : value;
+}
+
 function ConsumerCard({ card, multiple, onBack, onSent, canField }:
   { card: CardData; multiple: boolean; onBack: () => void; onSent: () => void; canField: boolean }) {
   return (
@@ -179,7 +186,7 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
             {sec.title && <h3 className="cs-section__title">{sec.title}</h3>}
             <dl className="cs-fields">
               {sec.rows.map(([label, value], i) => (
-                <div key={i} className="cs-fields__row"><dt>{label}</dt><dd>{value}</dd></div>
+                <div key={i} className="cs-fields__row"><dt>{label}</dt><dd>{fieldValue(label, value)}</dd></div>
               ))}
             </dl>
           </section>
@@ -196,6 +203,7 @@ function ConsumerCard({ card, multiple, onBack, onSent, canField }:
                 <Badge tone={v.status === 'new' ? 'accent' : 'ok'}>{v.status === 'new' ? 'У инженера' : 'Завершена'}</Badge>
                 <span>{fmtTime(v.createdAt)} · {v.author ?? 'монтёр'}</span>
                 {v.geo && <a className="cs-link" href={mapUrl(v.geo)} target="_blank" rel="noreferrer"><IconMap size={16} />на карте</a>}
+                {v.geo && <RouteLinks geo={v.geo} />}
                 <span className="muted">{v.files.filter(f => f.kind === 'photo').length} фото{v.files.some(f => f.kind === 'psu') ? ' · ПСУ' : ''}</span>
               </li>
             ))}

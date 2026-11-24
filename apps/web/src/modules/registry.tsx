@@ -5,6 +5,7 @@ import {
   IconBars, IconCheckCircle, IconCpu, IconPie, IconScale, IconSliders, IconBook, IconCalendar, IconCamera, IconClock, IconDocCheck, IconFolder,
   IconCheck, IconInbox, IconLayers, IconList, IconNetwork, IconPlus, IconSearch, IconShield, IconTarget,
   IconSettings, IconUpload, IconUser, IconUsers, IconWrench,
+  IconMap,
 } from '../ui/icons.js';
 
 export interface MenuItem {
@@ -61,6 +62,7 @@ export const MODULES: ModuleMeta[] = [
       { id: 'inbox', title: 'Отметки монтёров', icon: <IconInbox />, perm: 'consumers.inbox', count: newVisitsCount,
         about: 'Новые отметки с выезда: геометка, фото объекта и ПСУ в PDF — скачать и завершить.' },
       { id: 'done', title: 'Завершённые', icon: <IconCheck />, perm: 'consumers.inbox', about: 'Завершённые отметки хранятся 3 дня, потом удаляются вместе с файлами.' },
+      { id: 'substations', title: 'ТП и карта', icon: <IconMap />, about: 'ТП РЭС с координатами и числом потребителей по реестру; на карте — потребители и их привязка к ТП.' },
       { id: 'registry', title: 'Реестр РЭС', icon: <IconUpload />, perm: 'consumers.registry', about: 'Расширенный список потребителей своего РЭС: новая загрузка заменяет прежнюю целиком.' },
     ],
   },
