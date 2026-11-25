@@ -43,3 +43,21 @@
   .ab-computed { grid-template-columns: 1fr; gap: 4px; }
   .ab-computed dd { margin-bottom: 8px; }
 }
+
+/* Новый акт по ТУ: загрузка ТУ и ПСУ, реквизиты из ТУ, шаги создания */
+.ab-new { display: grid; gap: 16px; }
+.ab-new__files { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-items: start; }
+.ab-drop { display: grid; gap: 8px; justify-items: start; padding: 16px 18px; border-radius: var(--radius-lg); background: var(--block-1); }
+.ab-drop:nth-child(even) { background: var(--block-2); }
+.ab-drop b { font-size: 15px; }
+.ab-drop .muted { font-size: 13px; }
+.ab-drop__file { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.ab-drop__file .link { border: 0; background: none; color: var(--danger); cursor: pointer; font: inherit; font-weight: 500; padding: 0 0 0 6px; }
+.ab-new__form { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px 14px; }
+.ab-new__wide { grid-column: 1 / -1; }
+.ab-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.ab-steps li { display: flex; gap: 10px; align-items: center; }
+.ab-steps .badge { margin: 0; min-width: 64px; justify-content: center; }
+.ab-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ab-quick__item { height: 30px; padding: 0 10px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--accent) 30%, #fff); color: var(--accent-strong); font: 600 13px var(--font); cursor: pointer; }
+.ab-quick__item:hover { background: color-mix(in srgb, var(--accent) 45%, #fff); }

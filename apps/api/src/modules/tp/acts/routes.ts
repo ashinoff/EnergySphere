@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { config } from '../../../config.js';
 import { transaction, HttpError, type DB } from '../core/db.js';
 import { role } from '../core/workflow.js';
-import { documentModel } from '../core/documents.js';
+import { documentModel, isBody } from '../core/documents.js';
+import { tuCardFacts } from '../core/tu-rules.js';
 import { loadReferences } from '../core/references.js';
 import { ACT_TEMPLATES, KIND_TITLES, METERING_TITLES, POINT_TITLES, type ActKind, type ActMetering, type ActPoint } from './catalog.js';
 import { ACT_FIELDS, FIELD_INPUTS, actValues, canonicalField, type ActInput } from './fields.js';
@@ -91,9 +92,15 @@ export function actBuilder({ pool, authenticate, storagePath }: { pool: pg.Pool;
       templates: ACT_TEMPLATES.map(({ source: _s, ...t }) => ({ ...t, ...used[t.id] })), kinds: KIND_TITLES, points: POINT_TITLES, meterings: METERING_TITLES,
       fields: ACT_FIELDS.map(f => ({ ...f, input: FIELD_INPUTS[f.name] ?? null })),
       attorneys: refs.attorneys.rows.map(a => ({ ...a, expired: !!a.validUntil && a.validUntil < today, phrase: signerPhrase(a), signature: signerSignature(a) })),
-      cableBrands: refs.cables.brands, breakers: refs.breakers.rows,
+      cableBrands: refs.cables.brands, breakers: refs.breakers.rows, cables: refs.cables.rows,
       svetlyachok: !!(config.svetlyachokUrl && config.svetlyachokKey),
     });
+  }));
+
+  // РЭС, где человек — инженер (может создать акт по ТУ)
+  router.get('/areas', handle(async (_req, res) => {
+    res.json(await run(res, async db => (await db.query(
+      "SELECT r.id, r.name FROM tp.res_units r WHERE tp.has_role('RIRU_ENGINEER', r.id) ORDER BY r.name")).rows, true));
   }));
 
   // Анкета по карточке: реквизиты карточки + разбор ТУ + подсказка схемы.
@@ -103,14 +110,18 @@ export function actBuilder({ pool, authenticate, storagePath }: { pool: pg.Pool;
       const card = Object.fromEntries((await db.query('SELECT field_code,value FROM tp.card_values WHERE act_id=$1', [act.id])).rows.map(r => [r.field_code, r.value]));
       const tu = act.technical_conditions_id ? (await db.query(
         'SELECT t.document_number,t.document_date,t.file_id FROM tp.technical_conditions t WHERE t.id=$1', [act.technical_conditions_id])).rows[0] : null;
-      return { act, card, tu };
+      return { act, card, tu, refs: await loadReferences(db) };
     }, true);
-    const { act, card, tu } = out;
+    const { act, card, tu, refs } = out;
     let facts: ReturnType<typeof tuFacts> = {};
+    let tuPhases = '';
     let tuNote = act.technical_conditions_id ? '' : 'К карточке не приложены ТУ — данные ТУ заполните вручную.';
     if (tu) {
-      try { facts = tuFacts((await documentModel(await readFile(resolve(storagePath, tu.file_id)))).blocks); }
-      catch { tuNote = 'Не удалось прочитать файл ТУ — проверьте данные ТУ вручную.'; }
+      try {
+        const blocks = (await documentModel(await readFile(resolve(storagePath, tu.file_id)))).blocks;
+        facts = tuFacts(blocks);
+        tuPhases = tuCardFacts(blocks.filter(b => isBody(b.part))).phases.value;
+      } catch { tuNote = 'Не удалось прочитать файл ТУ — проверьте данные ТУ вручную.'; }
     }
     const day = (d: unknown) => d instanceof Date ? new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10) : typeof d === 'string' ? d.slice(0, 10) : undefined;
     const power = card.power_kw ? Number(card.power_kw) : facts.powerAllowedKw;
@@ -125,11 +136,20 @@ export function actBuilder({ pool, authenticate, storagePath }: { pool: pg.Pool;
       actNumber: act.act_number && act.act_number !== act.contract_number ? act.act_number : undefined,
       actDate: new Date().toISOString().slice(0, 10),
     };
+    // Подсказки из справочников по мощности и фазности: номинал ВА и ТТ, жилы × сечение кабеля
+    const phases = String(card.phases ?? tuPhases ?? '');
+    const ph = /^1/.test(phases) ? '1ф' : '3ф';
+    const p = Number(power) || 0;
+    const breaker = p ? refs.breakers.rows.find(r => r.phases === ph && p >= r.from && p <= r.to) : undefined;
+    const cable = p ? refs.cables.rows.find(r => r.voltage === (ph === '1ф' ? '0.23' : '0.38') && p >= r.from && p <= r.to) : undefined;
+    if (breaker) input.breakerA = String(breaker.breaker);
+    if (cable) input.cableSection = `${cable.cores}х${String(cable.section).replace('.', ',')}`;
+    if (breaker?.ct) input.ct = { ratio: breaker.ct };
     const kind: ActKind = act.act_type === 'NOTICE' ? 'ecp' : 'paper';
-    const metering: ActMetering = /тт/i.test(String(card.phases ?? '')) ? 'ct' : 'direct';
+    const metering: ActMetering = /тт/i.test(phases) || breaker?.ct ? 'ct' : 'direct';
     res.json({
       act: { id: act.id, resId: act.res_id, state: act.state, actType: act.act_type, revision: act.revision, contractNumber: act.contract_number },
-      input, tu: { ...facts, note: tuNote },
+      input, tu: { ...facts, note: tuNote, phases: phases || null, fromReference: { breaker: !!breaker, cable: !!cable } },
       suggestion: { kind, point: facts.point ?? null, metering },
     });
   }));

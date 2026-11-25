@@ -3,6 +3,7 @@ import { api, apiFetch } from '../../auth/session.js';
 import { Badge, Button, Card, Empty, Field, Input, PageHeader, Select, TextArea, useToast } from '../../ui/kit.js';
 import { IconCheckCircle, IconDownload, IconUpload } from '../../ui/icons.js';
 import type { MenuItem, ModuleMeta } from '../registry.js';
+import { NewActFromTu } from './NewActFromTu.js';
 
 // «Создание акта по ТУ»: акт ТП / уведомление из шаблонов отдела по карточке договора.
 // Анкета заполняется из карточки и ТУ (сервер: modules/tp/acts), инженер проверяет,
@@ -18,7 +19,8 @@ type Metering = 'direct' | 'ct';
 type Template = { id: string; title: string; kind: Kind; point: Point; metering: Metering; power?: 'le15' | 'gt15'; request?: 'new' | 'increase'; losses?: boolean; fields: string[]; extra: string[] };
 type FieldInfo = { name: string; label: string; source: 'tu' | 'engineer' | 'meter' | 'computed'; input: { path: string; type: 'text' | 'number' | 'date' | 'int' | 'long' } | null };
 type Attorney = { number: string; date: string; person: string; position: string; validUntil: string | null; expired: boolean; phrase: string; signature: string };
-type Catalog = { templates: Template[]; kinds: Record<Kind, string>; points: Record<Point, string>; meterings: Record<Metering, string>; fields: FieldInfo[]; attorneys: Attorney[]; cableBrands: string[]; svetlyachok: boolean };
+type Catalog = { templates: Template[]; kinds: Record<Kind, string>; points: Record<Point, string>; meterings: Record<Metering, string>; fields: FieldInfo[]; attorneys: Attorney[]; cableBrands: string[]; svetlyachok: boolean;
+  breakers: { phases: string; breaker: number; ct: string | null }[]; cables: { cores: number; section: number }[] };
 type ActRow = { id: string; res_name: string; act_type: string; state: string; contract_number: string; contract_date: string; applicant: string; address: string; has_tu: boolean; versions: number };
 type Input = Record<string, unknown> & { meter?: Record<string, unknown>; ct?: Record<string, unknown>; overrides?: Record<string, string> };
 type Prefill = { act: { id: string; actType: string; contractNumber: string }; input: Input; tu: Record<string, unknown> & { note?: string; pointText?: string }; suggestion: { kind: Kind; point: Point | null; metering: Metering } };
@@ -71,6 +73,7 @@ export function ActBuilder({ module, page }: { module: ModuleMeta; page: MenuIte
   const [busy, setBusy] = useState<'' | 'download' | 'send' | 'meters'>('');
   const [confirmMissing, setConfirmMissing] = useState(false);
   const [saved, setSaved] = useState<{ version: number } | null>(null);
+  const [mode, setMode] = useState<'new' | 'existing'>('new');
 
   const loadActs = useCallback(() => api<ActRow[]>(`${BASE}/acts`).then(setActs).catch(e => { setActs([]); toast(e.message, 'error'); }), [toast]);
   useEffect(() => {
@@ -170,15 +173,32 @@ export function ActBuilder({ module, page }: { module: ModuleMeta; page: MenuIte
   };
 
   const set = (path: string, value: unknown) => { setInput(i => setPath(i, path, value)); setConfirmMissing(false); setSaved(null); };
+  // Подсказки к полям анкеты: выбрать из списка или вписать своё (справочники TP и типовые значения)
+  const years = Array.from({ length: 13 }, (_, i) => String(new Date().getFullYear() - i));
+  const OPTIONS: Record<string, string[]> = {
+    breakerA: [...new Set((catalog?.breakers ?? []).map(b => String(b.breaker)))].sort((a, b) => +a - +b),
+    cableSection: [...new Set((catalog?.cables ?? []).map(c => `${c.cores}х${String(c.section).replace('.', ',')}`))],
+    'ct.ratio': [...new Set([...(catalog?.breakers ?? []).map(b => b.ct).filter((x): x is string => !!x), '50/5', '75/5', '100/5', '150/5', '200/5', '300/5', '400/5', '600/5'])],
+    'meter.accuracyClass': ['0,5S', '1,0', '2,0'], 'ct.accuracyClass': ['0,5S', '0,5'],
+    'meter.checkQuarter': ['1', '2', '3', '4'], 'ct.checkQuarter': ['1', '2', '3', '4'], 'meter.checkYear': years, 'ct.checkYear': years,
+    voltageKv: ['0,23', '0,4', '6', '10'], substationVoltage: ['110/10', '35/10', '110/35/10', '220/110/10'],
+    basis: ['паспорта РФ', 'устава', 'доверенности'], project: ['паспорт прибора учета', 'проектная документация'],
+    cableBrand: catalog?.cableBrands ?? [],
+  };
   const fieldInput = (f: FieldInfo) => {
     const { path, type } = f.input!;
+    const opts = OPTIONS[path];
     const raw = getPath(input, path);
     const value = raw === undefined || raw === null ? '' : String(raw);
     const num = (v: string) => v.trim() === '' ? undefined : Number(v.replace(/\s/g, '').replace(',', '.'));
+    const listId = `ab-opts-${path.replace('.', '-')}`;
     const control = type === 'long'
-      ? <TextArea value={value} onChange={e => set(path, e.target.value)} />
-      : path === 'cableBrand' && catalog?.cableBrands.length
-        ? <><Input list="act-cable-brands" value={value} onChange={e => set(path, e.target.value)} /><datalist id="act-cable-brands">{catalog.cableBrands.map(b => <option key={b} value={b} />)}</datalist></>
+      ? <><TextArea value={value} onChange={e => set(path, e.target.value)} />
+          {opts?.length ? <div className="ab-quick">{opts.map(o => <button key={o} type="button" className="ab-quick__item" onClick={() => set(path, o)}>{o}</button>)}</div> : null}</>
+      : opts?.length
+        ? <><Input list={listId} placeholder="выберите или впишите" value={value}
+            onChange={e => set(path, type === 'number' || type === 'int' ? num(e.target.value) : e.target.value)} />
+            <datalist id={listId}>{opts.map(o => <option key={o} value={o} />)}</datalist></>
         : <Input type={type === 'date' ? 'date' : 'text'} inputMode={type === 'number' || type === 'int' ? 'decimal' : undefined} value={value}
           onChange={e => set(path, type === 'number' || type === 'int' ? num(e.target.value) : e.target.value)} />;
     return <Field key={f.name} label={f.label}>{control}</Field>;
@@ -200,10 +220,16 @@ export function ActBuilder({ module, page }: { module: ModuleMeta; page: MenuIte
       <PageHeader crumbs={['ЭнергоСфера', module.title]} title={page.title} subtitle={page.about} actions={actions} />
       {!catalog || !acts ? <p className="muted">Загрузка…</p> : (
         <div className="ab">
-          <Card title="1. Карточка договора">
-            {!acts.length ? (
+          <Card title="1. Договор и ТУ" aside={
+            <div className="tabs" role="tablist" aria-label="Откуда акт">
+              <button type="button" className={`tab${mode === 'new' ? ' is-active' : ''}`} onClick={() => setMode('new')}>Новый акт по ТУ</button>
+              <button type="button" className={`tab${mode === 'existing' ? ' is-active' : ''}`} onClick={() => setMode('existing')}>Продолжить карточку<span className="tab__count">{acts.length}</span></button>
+            </div>}>
+            {mode === 'new' ? (
+              <NewActFromTu onCreated={async id => { await loadActs(); setMode('existing'); await open(id); }} />
+            ) : !acts.length ? (
               <Empty image={module.image} title="Нет карточек для подготовки акта"
-                text="Акт формируется по карточке договора в черновике, на возврате или на доработке. Создайте карточку и приложите ТУ в разделе «Загрузка на проверку»." />
+                text="Здесь черновики, возвращённые и карточки на доработке по вашим РЭС. Новый акт начните с «Новый акт по ТУ»." />
             ) : (
               <div className="ab-act">
                 <Field label="Договор" hint="Черновики, возвращённые и на доработке — по вашим РЭС">

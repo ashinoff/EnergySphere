@@ -134,16 +134,25 @@ test('создание акта по ТУ: анкета из ТУ → Word → �
   assert.ok([403, 404].includes((await request(app).get(`${B}/acts/${act.id}/prefill`).set(as('other'))).status));
   assert.equal((await request(app).get(`${B}/acts/${act.id}/prefill`)).status, 401);
 
+  // «Новый акт по ТУ»: РЭС инженера, чтение реквизитов из ТУ
+  assert.deepEqual((ok(await request(app).get(`${B}/areas`).set(as('riru'))) as { name: string }[]).map(a => a.name), ['Адлерский РЭС']);
+  const extracted = ok(await request(app).post('/tp/api/v1/documents/extract-tu').set(as('riru')).field('resId', area).attach('file', tuDocx, 'tu.docx'));
+  assert.equal(extracted.fields.contractNumber.value, '00001-26-00000077-1');
+  assert.equal(extracted.fields.applicant.value, 'Тестова Анна Сергеевна');
+
   // анкета из карточки и ТУ
   const pre = ok(await request(app).get(`${B}/acts/${act.id}/prefill`).set(as('riru')));
   assert.equal(pre.tu.note, '');
   assert.equal(pre.suggestion.point, 'ru');
-  assert.deepEqual({ ...pre.input, actDate: undefined }, {
-    ...pre.input, actDate: undefined, applicantFullName: 'Тестова Анна Сергеевна', contractNumber: '00001-26-00000077-1', contractDate: '2026-08-20',
+  assert.deepEqual({ ...pre.input, actDate: undefined, breakerA: undefined, cableSection: undefined, ct: undefined }, {
+    ...pre.input, actDate: undefined, breakerA: undefined, cableSection: undefined, ct: undefined, applicantFullName: 'Тестова Анна Сергеевна', contractNumber: '00001-26-00000077-1', contractDate: '2026-08-20',
     tuNumber: '07-02/0999-26', tuDate: '2026-08-20', objectName: 'ЭПУ земельного участка', powerAllowedKw: 100, tp: '205',
     substationVoltage: '110/10', supplyCenter: 'Учебная', tuPointsNetwork: '10.1 - 10.3', tuPointsApplicant: '11.1 - 11.4', requestNumber: 'з3-02-02-0200-26-00000001',
   });
 
+  // подсказки из справочников по мощности 100 кВт (3 фазы): номинал ВА, ТТ, жилы × сечение
+  assert.ok(pre.input.breakerA, 'номинал ВА из справочника');
+  assert.ok(pre.input.cableSection, 'сечение из справочника');
   const catalog = ok(await request(app).get(`${B}/catalog`).set(as('riru')));
   assert.equal(catalog.templates.length, 21);
   assert.ok(catalog.templates.find((t: { id: string }) => t.id === 'paper-ru-ct').fields.includes('Подписант'));
@@ -191,6 +200,7 @@ test('создание акта по ТУ: анкета из ТУ → Word → �
     actNumber: '1', applicant: 'Тестов', address: 'Сочи' })).status, 403);
   assert.ok([403, 404].includes((await request(app).get(`${B}/acts/${act.id}/prefill`).set(as('viewer'))).status));
   assert.equal((ok(await request(app).get(`${B}/acts`).set(as('viewer'))) as unknown[]).length, 0);
+  assert.equal((ok(await request(app).get(`${B}/areas`).set(as('viewer'))) as unknown[]).length, 0);
   // два инженера развития в РЭС: доработку может взять любой, а маршрут назначает её одному —
   // автору акта (tp.returned_author), иначе любому инженеру РЭС. Согласующие — по-прежнему строго один.
   const riruId = ok(await request(app).get('/tp/api/v1/me').set(as('riru'))).id as string;
