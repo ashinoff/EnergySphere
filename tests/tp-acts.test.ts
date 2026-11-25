@@ -96,6 +96,7 @@ test('создание акта по ТУ: анкета из ТУ → Word → �
   const people: Record<string, { role: string; res?: string }> = {
     riru: { role: 'eng_development', res: 'Адлерский РЭС' },   // документы ведёт инженер развития
     viewer: { role: 'eng_realization', res: 'Адлерский РЭС' }, // инженер реализации — только смотрит
+    riru2: { role: 'eng_development', res: 'Адлерский РЭС' },  // второй инженер развития того же РЭС
     'riru-head': { role: 'nach_riru', res: 'Адлерский РЭС' },
     other: { role: 'eng_development', res: 'Хостинский РЭС' },
     tech: { role: 'admin' },
@@ -190,9 +191,31 @@ test('создание акта по ТУ: анкета из ТУ → Word → �
     actNumber: '1', applicant: 'Тестов', address: 'Сочи' })).status, 403);
   assert.ok([403, 404].includes((await request(app).get(`${B}/acts/${act.id}/prefill`).set(as('viewer'))).status));
   assert.equal((ok(await request(app).get(`${B}/acts`).set(as('viewer'))) as unknown[]).length, 0);
+  // два инженера развития в РЭС: доработку может взять любой, а маршрут назначает её одному —
+  // автору акта (tp.returned_author), иначе любому инженеру РЭС. Согласующие — по-прежнему строго один.
+  const riruId = ok(await request(app).get('/tp/api/v1/me').set(as('riru'))).id as string;
+  const riru2Me = ok(await request(app).get('/tp/api/v1/me').set(as('riru2')));
+  assert.deepEqual(riru2Me.roles.map((r: { role: string }) => r.role), ['RIRU_ENGINEER']);
+  const c = await tpDb.connect();
+  try {
+    await c.query('BEGIN');
+    await c.query("SELECT set_config('tp.user_id', $1, true)", [riruId]);
+    const pick = async () => (await c.query("SELECT id FROM tp.candidates('RIRU_ENGINEER', $1)", [area])).rows.map((r) => r.id);
+    assert.equal((await pick()).length, 1, 'без автора — один любой инженер');
+    await c.query("SELECT set_config('tp.returned_author', $1, true)", [riru2Me.id]);
+    assert.deepEqual(await pick(), [riru2Me.id]);
+    await c.query("SELECT set_config('tp.returned_author', $1, true)", [riruId]);
+    assert.deepEqual(await pick(), [riruId]);
+    await c.query('ROLLBACK');
+  } finally { c.release(); }
+  // загрузить новую версию может и второй инженер (не автор)
+  const stored2 = ok(await request(app).post(`/tp/api/v1/acts/${act.id}/files`).set(as('riru2')).field('documentType', 'ACT_TP').attach('file', docx, 'Акт ТП.docx'), 201);
+  const card2 = ok(await request(app).get(`/tp/api/v1/acts/${act.id}`).set(as('riru2')));
+  assert.equal(ok(await request(app).post(`/tp/api/v1/acts/${act.id}/versions`).set(as('riru2')).send({ fileId: stored2.id, expectedRevision: card2.revision })).number, 2);
+
   // права Сферы: у инженера реализации нет «Готовить акты ТП»
   const sphereMe = ok(await request(app).get('/api/me').set({ Authorization: `Bearer ${tokens.viewer}` }));
   assert.ok(!sphereMe.permissions.includes('tp.create') && sphereMe.permissions.includes('tp.view'));
   const after = ok(await request(app).get(`${B}/acts`).set(as('riru'))) as { id: string; versions: number }[];
-  assert.equal(after.find(a => a.id === act.id)!.versions, 1);
+  assert.equal(after.find(a => a.id === act.id)!.versions, 2);   // вторую версию загрузил другой инженер РЭС
 });
