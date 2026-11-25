@@ -11,7 +11,10 @@ import type { Role } from '../../core/access.js';
 export const TP_ISSUER = 'energysphere';
 
 const ROLE_MAP: Partial<Record<Role, string>> = {
-  eng_realization: 'RIRU_ENGINEER',  // готовит и загружает документы
+  // Документы ведёт инженер развития; инженер реализации только смотрит акты своего РЭС
+  // (RES_VIEWER, миграция tp/sphere_002) — решение владельца 26.11.2026.
+  eng_development: 'RIRU_ENGINEER',  // готовит, загружает, формирует акты, отправляет в маршрут
+  eng_realization: 'RES_VIEWER',     // зритель: видит документы своего РЭС, ничего не меняет
   nach_riru: 'RIRU_HEAD',            // 1-й согласующий своего РЭС
   nach_res: 'RES_HEAD',              // 2-й согласующий своего РЭС
   nach_stp: 'STP', eng_stp: 'STP_ENGINEER',
@@ -22,7 +25,7 @@ const ROLE_MAP: Partial<Record<Role, string>> = {
   nach_srs: 'GI_ENGINEER', eng_srs: 'GI_ENGINEER',
   nach_pts: 'GI_ENGINEER', eng_pts: 'GI_ENGINEER',
 };
-const RES_SCOPED = new Set(['RIRU_ENGINEER', 'RIRU_HEAD', 'RES_HEAD']);
+const RES_SCOPED = new Set(['RIRU_ENGINEER', 'RIRU_HEAD', 'RES_HEAD', 'RES_VIEWER']);
 
 export function tpRolesOf(user: Pick<UserContext, 'role' | 'isSuper' | 'resId'>): { role: string; res: boolean }[] {
   if (user.isSuper || user.role === 'admin') return [{ role: 'TECH_ADMIN', res: false }, { role: 'PROCESS_ADMIN', res: false }];

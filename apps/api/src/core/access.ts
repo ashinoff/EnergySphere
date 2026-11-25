@@ -76,7 +76,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   // реализации) обновляет реестр своего РЭС и завершает отметки, начальник
   // РИРУ и СУЭ — смотрят.
   nach_riru: ['analysis.view', 'consumers.view', 'consumers.inbox', 'riru.view', 'riru.edit', 'tp.view', 'tp.approve'],
-  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.inbox', 'consumers.complete', 'riru.view', 'tp.view', 'tp.create'],
+  // Акты ТП: инженер реализации только смотрит, документы ведёт инженер развития (26.11.2026).
+  eng_realization: ['analysis.view', 'consumers.view', 'consumers.registry', 'consumers.inbox', 'consumers.complete', 'riru.view', 'tp.view'],
   eng_development: ['consumers.view', 'riru.view', 'tp.view', 'tp.create'],
   monter: ['consumers.view', 'consumers.field'],
   nach_sue: ['analysis.view', 'consumers.view', 'consumers.inbox', 'riru.view', 'riru.docs', 'tp.view', 'tp.approve'],

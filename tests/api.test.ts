@@ -222,7 +222,7 @@ test('Акты ТП: мост ролей Сферы в маршрут TP_Approva
   const users = (await request(app).get('/api/admin/users').set(boss)).body;
   const eng = users.find((u: { username: string }) => u.username === 'tpeng');
   const res = (await request(app).get('/api/res').set(boss)).body.find((r: { name: string }) => r.name === 'Хостинский РЭС');
-  assert.equal((await request(app).patch(`/api/admin/users/${eng.id}`).set(boss).send({ role: 'eng_realization', resId: res.id })).status, 200);
+  assert.equal((await request(app).patch(`/api/admin/users/${eng.id}`).set(boss).send({ role: 'eng_development', resId: res.id })).status, 200);
 
   const me = await request(app).get('/tp/api/v1/me').set(engHeaders);
   assert.equal(me.status, 200);

@@ -61,7 +61,7 @@ test('маршрут согласования TP_Approval на ролях Сфе
 
   // Участники сценария TP → роли Сферы. «other» — начальник РИРУ другого РЭС.
   const people: Record<string, { role: string; res?: string }> = {
-    riru: { role: 'eng_realization', res: 'Адлерский РЭС' },
+    riru: { role: 'eng_development', res: 'Адлерский РЭС' },   // документы ведёт инженер развития
     'riru-head': { role: 'nach_riru', res: 'Адлерский РЭС' },
     chief: { role: 'nach_res', res: 'Адлерский РЭС' },
     sue: { role: 'nach_sue' }, stp: { role: 'nach_stp' }, gi: { role: 'glav_ing' },

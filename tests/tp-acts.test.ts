@@ -94,9 +94,10 @@ test('создание акта по ТУ: анкета из ТУ → Word → �
   const app = createApp({ db, tpDb, access, verify: createVerifier(jwks), tokens: createTokenClient(async () => new Response('{}', { status: 500 })) });
 
   const people: Record<string, { role: string; res?: string }> = {
-    riru: { role: 'eng_realization', res: 'Адлерский РЭС' },
+    riru: { role: 'eng_development', res: 'Адлерский РЭС' },   // документы ведёт инженер развития
+    viewer: { role: 'eng_realization', res: 'Адлерский РЭС' }, // инженер реализации — только смотрит
     'riru-head': { role: 'nach_riru', res: 'Адлерский РЭС' },
-    other: { role: 'eng_realization', res: 'Хостинский РЭС' },
+    other: { role: 'eng_development', res: 'Хостинский РЭС' },
     tech: { role: 'admin' },
   };
   const tokens: Record<string, string> = {};
@@ -178,6 +179,20 @@ test('создание акта по ТУ: анкета из ТУ → Word → �
   const card = ok(await request(app).get(`/tp/api/v1/acts/${act.id}`).set(as('riru')));
   const version = ok(await request(app).post(`/tp/api/v1/acts/${act.id}/versions`).set(as('riru')).send({ fileId: stored.id, expectedRevision: card.revision }));
   assert.equal(version.number, 1);
+
+  // инженер реализации своего РЭС — зритель: видит акт и файлы, но ничего не готовит
+  const tpMe = ok(await request(app).get('/tp/api/v1/me').set(as('viewer')));
+  assert.deepEqual(tpMe.roles.map((r: { role: string }) => r.role), ['RES_VIEWER']);
+  assert.equal((await request(app).get(`/tp/api/v1/acts/${act.id}`).set(as('viewer'))).status, 200);
+  assert.ok((ok(await request(app).get('/tp/api/v1/registry').set(as('viewer'))).items as { id: string }[]).some(a => a.id === act.id));
+  assert.equal((await request(app).post(`/tp/api/v1/acts/${act.id}/files`).set(as('viewer')).field('documentType', 'ACT_TP').attach('file', docx, 'x.docx')).status, 403);
+  assert.equal((await request(app).post('/tp/api/v1/acts').set(as('viewer')).send({ resId: area, contractNumber: '00001-26-00000078-1', contractDate: '2026-08-20',
+    actNumber: '1', applicant: 'Тестов', address: 'Сочи' })).status, 403);
+  assert.ok([403, 404].includes((await request(app).get(`${B}/acts/${act.id}/prefill`).set(as('viewer'))).status));
+  assert.equal((ok(await request(app).get(`${B}/acts`).set(as('viewer'))) as unknown[]).length, 0);
+  // права Сферы: у инженера реализации нет «Готовить акты ТП»
+  const sphereMe = ok(await request(app).get('/api/me').set({ Authorization: `Bearer ${tokens.viewer}` }));
+  assert.ok(!sphereMe.permissions.includes('tp.create') && sphereMe.permissions.includes('tp.view'));
   const after = ok(await request(app).get(`${B}/acts`).set(as('riru'))) as { id: string; versions: number }[];
   assert.equal(after.find(a => a.id === act.id)!.versions, 1);
 });
